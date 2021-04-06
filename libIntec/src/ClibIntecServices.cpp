@@ -131,9 +131,10 @@ const int32_t ClibIntecServices::InitializeUsbDevices()
 			if (libusb_get_device_descriptor(device, &desc) != 0)
 				throw ClibIntecException("libusb_get_device_descriptor failed");
 
-			if (desc.idProduct == PID && desc.idVendor == VUD)
+			if (desc.idProduct == PID && desc.idVendor == VID)
 				std::cout << "found Device " << std::hex << PID << " : " << std::hex << VID << std::endl;
 		}
+		return STATUS_OK;
 	}
 	catch (...)
 	{
