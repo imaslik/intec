@@ -8,9 +8,12 @@
 #define INC_CLIBINTECSERVICES_H_
 
 #include <stdint.h>
+#include <utility>
+#include <stdint.h>
 #include "libIntec.h"
-#include "ClibIntecUsbDevice.h"
+#include "ClibIntecDevice.h"
 #include <libusb-1.0/libusb.h>
+#include <map>
 
 #define MAX_USB_DEVICES 8
 
@@ -23,6 +26,12 @@ public:
 	const int32_t Initialize(void);
 	virtual ~ClibIntecServices() {}
 	virtual uint32_t GetUSBDevicesCount(){return m_DevCount;}
+	std::map<IntecUsbDeviceType, std::pair<uint16_t, uint16_t>> m_DevTypeToVidPid =
+	{
+			{IntecH, {0x4d8, 0x3c}},
+			{IntecD, {0x4d8, 0x3c}},
+			{TAU, {0x4d8, 0x3c}}
+	};
 
 private:
 	//libusb data members
@@ -32,15 +41,15 @@ private:
 
 protected:
 	uint32_t m_DevCount;
-	ClibIntecUsbDevice *m_Devices[MAX_USB_DEVICES];
+	ClibIntecDevice *m_Devices[MAX_USB_DEVICES];
 	char m_MsgBuffer[512];
-	IntecUsbDeviceType DevType;
+	IntecUsbDeviceType m_DevType;
 
 protected:
 	const int32_t InitializeUsbDevices();
 	const int32_t SearchUsbDevices();
 	const int32_t SearchEthernetDevices(uint32_t numOfDevices, char **devicesAddress);
-	ClibIntecUsbDevice *operator[](uint32_t i);
+	ClibIntecDevice *operator[](uint32_t i);
 
 private:
 	const int32_t InitializeLibusb();
@@ -50,5 +59,7 @@ private:
 ClibIntecServices* InstantiateIntecServices(IntecUsbDeviceType dev);
 void DeleteIntecServices(ClibIntecServices* services);
 //ClibIntecServices* InstantiateIntecServicesOverEthernet(IntecUsbDeviceType dev,uint32_t numOfDevices, char **devicesAddress);
+
+ClibIntecDevice* InstantiateIntecDevice(IntecDeiceType DeviceType);
 
 #endif /* INC_CLIBINTECSERVICES_H_ */

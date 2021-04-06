@@ -6,10 +6,22 @@
  */
 
 #include "ClibIntecServices.h"
+#include "ClibIntecUsbDevice.h"
 #include "ClibIntecException.h"
 #include "libIntec.h"
 #include <libusb-1.0/libusb.h>
 
+
+ClibIntecDevice* InstantiateIntecDevice(IntecDeiceType DeviceType)
+{
+	switch (DeviceType)
+	{
+	case Usb:
+		return new ClibIntecUsbDevice();
+	default:
+		return ERROR_NO_DEVICE;
+	}
+}
 ClibIntecServices* InstantiateIntecServices(IntecUsbDeviceType dev)
 {
 	return new ClibIntecServices(dev);
@@ -28,7 +40,7 @@ void DeleteIntecServices(ClibIntecServices* services)
 ClibIntecServices::ClibIntecServices(IntecUsbDeviceType DevType_arg)
 {
 	m_DevCount = 0;
-	DevType = DevType_arg;
+	m_DevType = DevType_arg;
 	for (int i=0; i < MAX_USB_DEVICES; i++)
 	{
 		m_Devices[i] = NULL;
@@ -38,7 +50,7 @@ ClibIntecServices::ClibIntecServices(IntecUsbDeviceType DevType_arg)
 ClibIntecServices::ClibIntecServices(IntecUsbDeviceType DevType_arg, uint32_t numOfDevices, char **HostName)
 {
 	m_DevCount = 0;
-	DevType = DevType_arg;
+	m_DevType = DevType_arg;
 	for (int i=0; i < MAX_USB_DEVICES; i++)
 	{
 		m_Devices[i] = NULL;
@@ -70,18 +82,6 @@ const int32_t ClibIntecServices::InitializeLibusb(void)
 	//initializing libusb
 	if(libusb_init(&m_libusb_ctx) !=0)
 		throw ClibIntecException("libusb initialization failed");
-
-	try
-	{
-		m_libusb_devc = libusb_get_device_list(m_libusb_ctx, &m_libusb_devv);
-		if (m_libusb_devc < 0)
-			throw ClibIntecException("no USB devices were detected by libusb");
-	}
-	catch (...)
-	{
-		libusb_exit(m_libusb_ctx);
-		return ERROR_LIBUSB_FAIL;
-	}
 	return STATUS_OK;
 }
 
@@ -92,7 +92,7 @@ const int32_t ClibIntecServices::ExitLibusb(void)
 	return STATUS_OK;
 }
 
-ClibIntecUsbDevice *ClibIntecServices::operator[](uint32_t i)
+ClibIntecDevice *ClibIntecServices::operator[](uint32_t i)
 {
 	if (i<m_DevCount)
 		return m_Devices[i];
@@ -104,25 +104,13 @@ const int32_t ClibIntecServices::InitializeUsbDevices()
 {
 	try
 	{
-		uint16_t VID, PID;
-		switch(DevType)
-		{
-		case IntecH:
-			PID=0x3c;
-			VID=0x4d8;
-			break;
-		case IntecD:
-			PID=0x3c;
-			VID=0x4d8;
-			break;
-		case TAU:
-			PID=0x3c;
-			VID=0x4d8;
-			break;
-		default:
-			PID=0x3c;
-			VID=0x4d8;
-		}
+		m_libusb_devc = libusb_get_device_list(m_libusb_ctx, &m_libusb_devv);
+		if (m_libusb_devc < 0)
+			throw ClibIntecException("no USB devices were detected by libusb");
+
+		std::pair VidPid = m_DevTypeToVidPid[m_DevType];
+		uint16_t VID = VidPid.first;
+		uint16_t PID = VidPid.second;
 
 		for (int i=0; i < m_libusb_devc; i++)
 		{
@@ -132,7 +120,12 @@ const int32_t ClibIntecServices::InitializeUsbDevices()
 				throw ClibIntecException("libusb_get_device_descriptor failed");
 
 			if (desc.idProduct == PID && desc.idVendor == VID)
+			{
 				std::cout << "found Device " << std::hex << PID << " : " << std::hex << VID << std::endl;
+				m_Devices[m_DevCount++];
+
+
+			}
 		}
 		return STATUS_OK;
 	}

@@ -12,6 +12,7 @@
 #define ERROR_FAIL              1
 #define ERROR_NOT_IMPLEMETED    2
 #define ERROR_LIBUSB_FAIL       3
+#define ERROR_NO_DEVICE         4
 
 static const char *IntecH_VIDPID="vid_04d8&pid_0053";
 static const char *IntecD_VIDPID="vid_04d8&pid_0054";
@@ -31,6 +32,11 @@ enum IntecDeviceOperationMode
 	UndefinedOpMode,
 	NormalOpMode,
 	BootLoaderOpMode
+};
+
+enum IntecDeiceType
+{
+	Usb
 };
 
 enum IntecDeviceDriverType

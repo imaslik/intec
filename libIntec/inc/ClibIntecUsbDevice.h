@@ -2,7 +2,7 @@
  * ClibIntecUsbDevice.h
  *
  *  Created on: Apr 6, 2021
- *      Author: svshared
+ *      Author: Shady Ganem <shady.ganem@intel.com>
  */
 
 #ifndef SRC_CLIBINTECUSBDEVICE_H_
@@ -11,7 +11,6 @@
 #include <stdint.h>
 #include "libIntec.h"
 #include <libusb-1.0/libusb.h>
-
 
 #define USB_READ_WRITE_TIMEOUT_MS 10000
 
@@ -22,35 +21,28 @@ typedef struct _USB_TRANS {
 	unsigned char Data[256];
 } USB_TRANS, *PUSB_TRANS;
 
-struct PIPE_ID
-{
-	unsigned char PipeInId;
-	unsigned short PipeInMaxPacketSize;
-	unsigned char PipeOutId;
-	unsigned short PipeOutMaxPacketSize;
-};
-
 class ClibIntecUsbDevice {
 public:
-	ClibIntecUsbDevice(IntecUsbDeviceType devType, unsigned long devIndex, IntecDeviceOperationMode mode, IntecDeviceDriverType driverType);
+	ClibIntecUsbDevice();
+	ClibIntecUsbDevice(IntecUsbDeviceType devType, uint32_t devIndex, IntecDeviceOperationMode mode, IntecDeviceDriverType driverType);
 	virtual ~ClibIntecUsbDevice();
 
 	virtual int32_t Open();
-	virtual int32_t Connect();
-	virtual int32_t Write(unsigned char *szBuffer, uint32_t cbSize);
-	virtual int32_t Read(uint32_t addr, unsigned char *szBuffer, uint32_t *cbSize);
-	virtual int32_t Write(uint32_t addr, unsigned char *szBuffer, uint32_t cbSize);
-	virtual int32_t Read(unsigned char *szBuffer, uint32_t *cbRead);
-	virtual int32_t Diconnect();
 	virtual int32_t Close();
+	virtual int32_t Connect();
+	virtual int32_t Diconnect();
+	virtual int32_t Write(unsigned char *szBuffer, uint32_t cbSize);
+	virtual int32_t Read(unsigned char *szBuffer, uint32_t *cbRead);
+	virtual int32_t Write(uint32_t addr, unsigned char *szBuffer, uint32_t cbSize);
+	virtual int32_t Read(uint32_t addr, unsigned char *szBuffer, uint32_t *cbSize);
+
 	virtual IntecDeviceOperationMode GetDeviceOperationMode();
 
 protected:
 	bool GetUsbDeviceSpeed(unsigned char * pDevcieSpeed);
 	bool GetDeviceHnadleByIndex(IntecUsbDeviceType type, unsigned long RequestedIndex, int hDeviceHandle);
-	bool QueryDeviceEndpoints(PIPE_ID pipeid, unsigned long TimeOutMSec);
+	bool QueryDeviceEndpoints(unsigned long TimeOutMSec);
 
-private:
 
 	IntecUsbDeviceType m_DeviceType;
 	unsigned long m_DeviceIndex;

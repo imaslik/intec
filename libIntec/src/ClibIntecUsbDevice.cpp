@@ -2,12 +2,17 @@
  * ClibIntecUsbDevice.cpp
  *
  *  Created on: Apr 6, 2021
- *      Author: svshared
+ *      Author: Shady Ganem <shady.ganem@intel.com>
  */
 
 #include "ClibIntecUsbDevice.h"
 
-ClibIntecUsbDevice::ClibIntecUsbDevice(IntecUsbDeviceType devType, unsigned long devIndex,IntecDeviceOperationMode mode,IntecDeviceDriverType driverType)
+ClibIntecUsbDevice::ClibIntecUsbDevice()
+{
+
+}
+
+ClibIntecUsbDevice::ClibIntecUsbDevice(IntecUsbDeviceType devType, uint32_t devIndex,IntecDeviceOperationMode mode,IntecDeviceDriverType driverType)
 {
 	m_DeviceType = devType;
 	m_DeviceIndex = devIndex;
