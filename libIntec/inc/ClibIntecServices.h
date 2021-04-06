@@ -22,7 +22,7 @@ public:
 	ClibIntecServices(IntecUsbDeviceType dev, uint32_t numOfDevices, char **HostName);
 	const int32_t Initialize(void);
 	virtual ~ClibIntecServices() {}
-	virtual uint32_t GetUSBDevicesCount(){return m_Devc;}
+	virtual uint32_t GetUSBDevicesCount(){return m_DevCount;}
 
 private:
 	//libusb data members
@@ -34,11 +34,12 @@ protected:
 	uint32_t m_DevCount;
 	ClibIntecUsbDevice *m_Devices[MAX_USB_DEVICES];
 	char m_MsgBuffer[512];
+	IntecUsbDeviceType DevType;
 
 protected:
-	const int32_t InitializeUsbDevices(IntecUsbDeviceType DevType);
-	const int32_t SearchUsbDevices(IntecUsbDeviceType DevType);
-	const int32_t SearchEthernetDevices(IntecUsbDeviceType DevType,uint32_t numOfDevices, char **devicesAddress);
+	const int32_t InitializeUsbDevices();
+	const int32_t SearchUsbDevices();
+	const int32_t SearchEthernetDevices(uint32_t numOfDevices, char **devicesAddress);
 	ClibIntecUsbDevice *operator[](uint32_t i);
 
 private:

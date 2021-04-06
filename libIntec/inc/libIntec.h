@@ -1,23 +1,9 @@
 #ifndef INC_LIBINTEC_H_
 #define INC_LIBINTEC_H_
 
-#include <stdint>
+#include <stdint.h>
 
 #define LIBINTEC_VERSION "beta 0.1"
-#define READ_BUF_SIZE 512
-#define WRITE_BUF_SIZE 512
-
-#define MAX_DTS 16
-#define MAX_DIODE 4
-#define MAX_TCASE_ON_CARD 4
-#define MAX_PACKAGES 4
-#define DTS_NAME_LEN 32
-
-#define MAX_DIODE_SOURCES 4
-#define MAX_PF_TEMPERATURE_SOURCES 4
-#define MAX_SOURCES_SIZE 16
-#define MAX_FEEDBACK_TEMPERATURE_SOURCES 4
-
 #define MAX_TEST_MSG_SIZE 512
 #define MSG_BUF_SIZE 512
 

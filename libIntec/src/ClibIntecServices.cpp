@@ -25,9 +25,20 @@ void DeleteIntecServices(ClibIntecServices* services)
 	delete services;
 }
 
-ClibIntecServices::ClibIntecServices(IntecUsbDeviceType DevType)
+ClibIntecServices::ClibIntecServices(IntecUsbDeviceType DevType_arg)
 {
 	m_DevCount = 0;
+	DevType = DevType_arg;
+	for (int i=0; i < MAX_USB_DEVICES; i++)
+	{
+		m_Devices[i] = NULL;
+	}
+}
+
+ClibIntecServices::ClibIntecServices(IntecUsbDeviceType DevType_arg, uint32_t numOfDevices, char **HostName)
+{
+	m_DevCount = 0;
+	DevType = DevType_arg;
 	for (int i=0; i < MAX_USB_DEVICES; i++)
 	{
 		m_Devices[i] = NULL;
@@ -89,7 +100,7 @@ ClibIntecUsbDevice *ClibIntecServices::operator[](uint32_t i)
 		throw ClibIntecException("Index out of USB devices range");
 }
 
-const int32_t ClibIntecServices::InitializeUsbDevices(IntecUsbDeviceType DevType)
+const int32_t ClibIntecServices::InitializeUsbDevices()
 {
 	try
 	{

@@ -12,9 +12,11 @@
 int test_main(int argc, char ** argvv)
 {
 	IntecUsbDeviceType DevType = IntecH;
-	if (libintec_initialize(DevType) != STATUS_OK)
+	if (libIntec_Initialize(DevType) != STATUS_OK)
 	{
 		std::cout << "libIntec driver initialization failed" << std::endl;
+		exit(1);
 	}
-
+	libIntec_Exit();
+	return 0;
 }
