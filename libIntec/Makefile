@@ -1,5 +1,6 @@
 CC= g++
 FLAGS= -Wall
+LDLIBUSB= `pkg-config --libs --cflags libusb-1.0`
 INC= -I/inc
 
 

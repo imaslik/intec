@@ -1,12 +1,11 @@
 
 CC= g++
-flags= -Wall 
-ldlibusb= `pkg-config --libs --cflags libusb-1.0`
+FLAGS= -Wall 
+LDLIBUSB= `pkg-config --libs --cflags libusb-1.0`
 
+testlibusb.test: testlibusb.cpp
+	$(CC) $(FLAGS) testlibusb.cpp -o testlibusb.test $(LDLIBUSB)
 
-testlibusb: testlibusb.cpp
-	$(CC) $(flags) testlibusb.cpp -o testlibusb  $(ldlibusb)
-
-runtestlibusb: testlibusb
-	./testlibusb
+runtestlibusb: testlibusb.test
+	./testlibusb.test
 
