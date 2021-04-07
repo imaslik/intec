@@ -13,6 +13,7 @@
 #define ERROR_NOT_IMPLEMETED 2
 #define ERROR_LIBUSB_FAIL 3
 #define ERROR_NO_DEVICE 4
+#define ERROR_USB_OPEN_FAIL 5
 
 enum IntecUsbDeviceType
 {
@@ -28,7 +29,7 @@ enum IntecDeviceOperationMode
 	BootLoaderOpMode
 };
 
-enum IntecDeiceType
+enum IntecDeviceType
 {
 	Usb
 };
@@ -45,6 +46,10 @@ enum IntecDeviceDriverType
 int libIntec_Initialize(IntecUsbDeviceType dev);
 int libIntec_Exit(void);
 int libIntec_InitializeOverNetwork(IntecUsbDeviceType dev, uint32_t numOfDevices, char **HostName);
-int libtIntec_GetNumberOfDevices(int&);
+int libtIntec_GetNumOfUsbDevices(int&);
+int libIntec_GetDeviceMode(int index, IntecDeviceOperationMode &mode);
+int libIntec_SetDeviceMode(int index, IntecDeviceOperationMode mode);
+int libIntec_GetDeviceName(int index, char* Buffer);
+
 
 #endif //INC_LIBINTEC_H_

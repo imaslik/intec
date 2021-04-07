@@ -35,17 +35,19 @@ public:
 			{TAU, {0x4d8, 0x3c}}
 	};
 
+public:
+	uint32_t m_DevCount;
+	ClibIntecDevice *m_Devices[MAX_USB_DEVICES];
+	char m_MsgBuffer[512];
+	IntecUsbDeviceType m_DevType;
+
 private:
 	//libusb data members
 	libusb_device **m_libusb_devv = NULL;
 	libusb_context *m_libusb_ctx = NULL;
 	ssize_t m_libusb_devc=0;
 
-protected:
-	uint32_t m_DevCount;
-	ClibIntecDevice *m_Devices[MAX_USB_DEVICES];
-	char m_MsgBuffer[512];
-	IntecUsbDeviceType m_DevType;
+
 
 protected:
 	const int32_t InitializeUsbDevices();
@@ -61,7 +63,6 @@ private:
 ClibIntecServices* InstantiateIntecServices(IntecUsbDeviceType dev);
 void DeleteIntecServices(ClibIntecServices* services);
 //ClibIntecServices* InstantiateIntecServicesOverEthernet(IntecUsbDeviceType dev,uint32_t numOfDevices, char **devicesAddress);
-
-ClibIntecDevice* InstantiateIntecDevice(IntecDeiceType DeviceType);
+ClibIntecDevice* InstantiateIntecDevice(IntecDeviceType DeviceType);
 
 #endif /* INC_CLIBINTECSERVICES_H_ */

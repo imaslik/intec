@@ -20,7 +20,7 @@ int test_main(int argc, char ** argvv)
 	}
 
 	int num_of_devices;
-	libtIntec_GetNumberOfDevices(num_of_devices);
+	libtIntec_GetNumOfUsbDevices(num_of_devices);
 	std::cout << "number of devices found on this machine " << num_of_devices << std::endl;
 	libIntec_Exit();
 	return 0;

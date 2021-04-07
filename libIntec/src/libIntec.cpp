@@ -59,12 +59,12 @@ int libIntec_Exit(void)
 	return STATUS_OK;
 }
 
-int libtIntec_GetNumberOfDevices(int& number_devices_found)
+int libtIntec_GetNumOfUsbDevices(int& number_devices_found)
 {
 	try
 	{
 		IntecMutex.lock();
-		number_devices_found = (int)libIntecServices->GetUSBDevicesCount();
+		number_devices_found = (int)libIntecServices->GetUsbDevicesCount();
 		IntecMutex.unlock();
 		return STATUS_OK;
 	}
@@ -73,4 +73,41 @@ int libtIntec_GetNumberOfDevices(int& number_devices_found)
 		IntecMutex.unlock();
 		return ERROR_FAIL;
 	}
+}
+
+int libIntec_GetDeviceMode(int index, IntecDeviceOperationMode &mode)
+{
+	try
+	{
+		IntecMutex.lock();
+		mode = libIntecServices->m_Devices[index]->GetDeviceMode();
+		IntecMutex.unlock();
+		return STATUS_OK;
+	}
+	catch (...)
+	{
+		IntecMutex.unlock();
+		return ERROR_FAIL;
+	}
+}
+
+int libIntec_SetDeviceMode(int index, IntecDeviceOperationMode mode)
+{
+	try
+	{
+		IntecMutex.lock();
+		libIntecServices->m_Devices[index]->SetDeviceMode(mode);
+		IntecMutex.unlock();
+		return STATUS_OK;
+	}
+	catch (...)
+	{
+		IntecMutex.unlock();
+		return ERROR_FAIL;
+	}
+}
+
+int libIntec_GetDeviceName(int index, char* Buffer)
+{
+
 }

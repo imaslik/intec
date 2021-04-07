@@ -12,7 +12,7 @@
 #include <libusb-1.0/libusb.h>
 
 
-ClibIntecDevice* InstantiateIntecDevice(IntecDeiceType DeviceType)
+ClibIntecDevice* InstantiateIntecDevice(IntecDeviceType DeviceType)
 {
 	switch (DeviceType)
 	{
@@ -63,7 +63,7 @@ ClibIntecServices::~ClibIntecServices()
 	libusb_exit(m_libusb_ctx);
 }
 
-const int32_t ClibIntecServices::Initialize(void)
+const int32_t ClibIntecServices::Initialize()
 {
 	try
 	{
@@ -83,7 +83,7 @@ uint32_t ClibIntecServices::GetUsbDevicesCount()
 }
 
 
-const int32_t ClibIntecServices::InitializeLibusb(void)
+const int32_t ClibIntecServices::InitializeLibusb()
 {
 	//initializing libusb
 	if(libusb_init(&m_libusb_ctx) !=0)
@@ -110,7 +110,6 @@ const int32_t ClibIntecServices::InitializeUsbDevices()
 {
 	try
 	{
-		std::cout << "debug print: ClibIntecServices::InitializeUsbDevices" << std::endl;
 		m_libusb_devc = libusb_get_device_list(m_libusb_ctx, &m_libusb_devv);
 		if (m_libusb_devc < 0)
 			throw ClibIntecException("no USB devices were detected by libusb");
@@ -125,11 +124,15 @@ const int32_t ClibIntecServices::InitializeUsbDevices()
 			libusb_device_descriptor desc;
 			if (libusb_get_device_descriptor(device, &desc) != 0)
 				throw ClibIntecException("libusb_get_device_descriptor failed");
-			std::cout << "debug print: VID = " << std::hex << desc.idVendor << " PID = " << std::hex << desc.idProduct << std::endl;
 			if (desc.idProduct == PID && desc.idVendor == VID)
 			{
-				std::cout << "found Device " << std::hex << PID << " : " << std::hex << VID << std::endl;
-				m_Devices[m_DevCount++];
+				if (m_DevCount <= MAX_USB_DEVICES)
+				{
+					m_Devices[m_DevCount] = InstantiateIntecDevice(Usb);
+					m_Devices[m_DevCount]->SetVidPid(desc.idVendor, desc.idProduct);
+					m_Devices[m_DevCount]->SetDeviceReference(device);
+					m_DevCount++;
+				}
 			}
 		}
 		return STATUS_OK;
