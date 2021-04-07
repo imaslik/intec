@@ -18,6 +18,10 @@ int test_main(int argc, char ** argvv)
 		std::cout << "libIntec driver initialization failed" << std::endl;
 		exit(1);
 	}
+
+	int num_of_devices;
+	libtIntec_GetNumberOfDevices(num_of_devices);
+	std::cout << "number of devices found on this machine " << num_of_devices << std::endl;
 	libIntec_Exit();
 	return 0;
 }

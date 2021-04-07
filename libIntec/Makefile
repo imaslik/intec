@@ -24,12 +24,6 @@ $(BIN)/%.o: $(SRC)/%.cpp $(INC)/%.h
 	$(CC) -fPIC $(FLAGS) $(LDLIBUSB)-I$(INC) -c $(filter-out %.h, $^) -o $@ 
  
 clean:
-	rm -rf *.o
 	rm -rf bin/*.o
 	rm -rf lib/*.so lib/*.h
 	rm -rf inc/*.gch
-	rm -rf *.so
-	rm -rf bin/*.so
-	rm -rf lib/*.o lib/*.h
-	rm -rf inc/*.gch
- 

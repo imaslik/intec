@@ -27,10 +27,10 @@ public:
 	virtual ~ClibIntecServices();
 
 	const int32_t Initialize(void);
-	virtual uint32_t GetUSBDevicesCount(){return m_DevCount;}
+	virtual uint32_t GetUsbDevicesCount();
 	std::map<IntecUsbDeviceType, std::pair<uint16_t, uint16_t>> m_DevTypeToVidPid =
 	{
-			{IntecH, {0x4d8, 0x3c}},
+			{IntecH, {0x4d8, 0x53}},
 			{IntecD, {0x4d8, 0x3c}},
 			{TAU, {0x4d8, 0x3c}}
 	};

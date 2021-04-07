@@ -77,6 +77,12 @@ const int32_t ClibIntecServices::Initialize(void)
 	}
 }
 
+uint32_t ClibIntecServices::GetUsbDevicesCount()
+{
+	return m_DevCount;
+}
+
+
 const int32_t ClibIntecServices::InitializeLibusb(void)
 {
 	//initializing libusb
@@ -104,6 +110,7 @@ const int32_t ClibIntecServices::InitializeUsbDevices()
 {
 	try
 	{
+		std::cout << "debug print: ClibIntecServices::InitializeUsbDevices" << std::endl;
 		m_libusb_devc = libusb_get_device_list(m_libusb_ctx, &m_libusb_devv);
 		if (m_libusb_devc < 0)
 			throw ClibIntecException("no USB devices were detected by libusb");
@@ -118,13 +125,11 @@ const int32_t ClibIntecServices::InitializeUsbDevices()
 			libusb_device_descriptor desc;
 			if (libusb_get_device_descriptor(device, &desc) != 0)
 				throw ClibIntecException("libusb_get_device_descriptor failed");
-
+			std::cout << "debug print: VID = " << std::hex << desc.idVendor << " PID = " << std::hex << desc.idProduct << std::endl;
 			if (desc.idProduct == PID && desc.idVendor == VID)
 			{
 				std::cout << "found Device " << std::hex << PID << " : " << std::hex << VID << std::endl;
 				m_Devices[m_DevCount++];
-
-
 			}
 		}
 		return STATUS_OK;

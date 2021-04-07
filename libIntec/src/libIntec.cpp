@@ -59,19 +59,18 @@ int libIntec_Exit(void)
 	return STATUS_OK;
 }
 
-int libtIntec_GetNumberOfDevices(unsigned int * NumOfUsbDevices)
+int libtIntec_GetNumberOfDevices(int& number_devices_found)
 {
-	IntecMutex.lock();
-	int status;
 	try
 	{
-		return (int)libIntecServices->GetUSBDevicesCount();
+		IntecMutex.lock();
+		number_devices_found = (int)libIntecServices->GetUSBDevicesCount();
+		IntecMutex.unlock();
+		return STATUS_OK;
 	}
 	catch (...)
 	{
-		status = ERROR_FAIL;
+		IntecMutex.unlock();
+		return ERROR_FAIL;
 	}
-	status = STATUS_OK;
-	IntecMutex.unlock();
-	return status;
 }

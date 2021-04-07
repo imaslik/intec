@@ -45,6 +45,6 @@ enum IntecDeviceDriverType
 int libIntec_Initialize(IntecUsbDeviceType dev);
 int libIntec_Exit(void);
 int libIntec_InitializeOverNetwork(IntecUsbDeviceType dev, uint32_t numOfDevices, char **HostName);
-int libtIntec_GetNumberOfDevices(unsigned int * NumOfUsbDevices);
+int libtIntec_GetNumberOfDevices(int&);
 
 #endif //INC_LIBINTEC_H_
