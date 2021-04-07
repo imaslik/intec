@@ -65,7 +65,7 @@ int libtIntec_GetNumberOfDevices(unsigned int * NumOfUsbDevices)
 	int status;
 	try
 	{
-
+		return (int)libIntecServices->GetUSBDevicesCount();
 	}
 	catch (...)
 	{

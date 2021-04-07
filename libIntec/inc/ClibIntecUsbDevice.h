@@ -29,22 +29,20 @@ public:
 	ClibIntecUsbDevice(IntecUsbDeviceType devType, uint32_t devIndex, IntecDeviceOperationMode mode, IntecDeviceDriverType driverType);
 	virtual ~ClibIntecUsbDevice();
 
-	virtual int32_t Open();
-	virtual int32_t Close();
-	virtual int32_t Connect();
-	virtual int32_t Diconnect();
-	virtual int32_t Write(unsigned char *szBuffer, uint32_t cbSize);
-	virtual int32_t Read(unsigned char *szBuffer, uint32_t *cbRead);
-	virtual int32_t Write(uint32_t addr, unsigned char *szBuffer, uint32_t cbSize);
-	virtual int32_t Read(uint32_t addr, unsigned char *szBuffer, uint32_t *cbSize);
-
-	virtual IntecDeviceOperationMode GetDeviceOperationMode();
+	virtual int32_t Open(){return STATUS_OK;}
+	virtual int32_t Close(){return STATUS_OK;}
+	virtual int32_t Connect(){return STATUS_OK;}
+	virtual int32_t Diconnect(){return STATUS_OK;}
+	virtual int32_t Write(unsigned char *szBuffer, uint32_t cbSize){return STATUS_OK;}
+	virtual int32_t Read(unsigned char *szBuffer, uint32_t *cbRead){return STATUS_OK;}
+	virtual int32_t Write(uint32_t addr, unsigned char *szBuffer, uint32_t cbSize){return STATUS_OK;}
+	virtual int32_t Read(uint32_t addr, unsigned char *szBuffer, uint32_t *cbSize){return STATUS_OK;}
+	virtual IntecDeviceOperationMode GetDeviceOperationMode(){return UndefinedOpMode;}
 
 protected:
-	bool GetUsbDeviceSpeed(unsigned char * pDevcieSpeed);
-	bool GetDeviceHnadleByIndex(IntecUsbDeviceType type, unsigned long RequestedIndex, int hDeviceHandle);
-	bool QueryDeviceEndpoints(unsigned long TimeOutMSec);
-
+	bool GetUsbDeviceSpeed(unsigned char * pDevcieSpeed){return true;}
+	bool GetDeviceHnadleByIndex(IntecUsbDeviceType type, unsigned long RequestedIndex, int hDeviceHandle){return true;}
+	bool QueryDeviceEndpoints(unsigned long TimeOutMSec){return true;}
 
 	IntecUsbDeviceType m_DeviceType;
 	unsigned long m_DeviceIndex;

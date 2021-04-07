@@ -7,7 +7,3 @@
 
 #include "ClibIntecDevice.h"
 
-ClibIntecDevice::ClibIntecDevice() {
-	// TODO Auto-generated constructor stub
-
-}

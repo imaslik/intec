@@ -108,7 +108,7 @@ const int32_t ClibIntecServices::InitializeUsbDevices()
 		if (m_libusb_devc < 0)
 			throw ClibIntecException("no USB devices were detected by libusb");
 
-		std::pair VidPid = m_DevTypeToVidPid[m_DevType];
+		std::pair<uint16_t, uint16_t> VidPid = m_DevTypeToVidPid[m_DevType];
 		uint16_t VID = VidPid.first;
 		uint16_t PID = VidPid.second;
 

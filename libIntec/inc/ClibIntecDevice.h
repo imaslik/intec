@@ -5,15 +5,14 @@
  *      Author: Shady Ganem <shady.ganem@intel.com>
  */
 
-#ifndef SRC_CLIBINTECDEVICE_H_
-#define SRC_CLIBINTECDEVICE_H_
+#ifndef INC_CLIBINTECDEVICE_H_
+#define INC_CLIBINTECDEVICE_H_
 #include <stdint.h>
-
-
+#include <iostream>
 class ClibIntecDevice {
 public:
-	ClibIntecDevice();
-	virtual ~ClibIntecDevice()=0;
+	ClibIntecDevice(){std::cout << "ClibIntecDevice is a pure virtual" << std::endl;}
+	virtual ~ClibIntecDevice(){std::cout << "ClibIntecDevice is a pure virtual" << std::endl;}
 	virtual int32_t Open()=0;
 	virtual int32_t Close()=0;
 	virtual int32_t Connect()=0;

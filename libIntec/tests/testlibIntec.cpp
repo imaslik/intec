@@ -11,6 +11,7 @@
 
 int test_main(int argc, char ** argvv)
 {
+	std::cout << "libIntec test" << std::endl;
 	IntecUsbDeviceType DevType = IntecH;
 	if (libIntec_Initialize(DevType) != STATUS_OK)
 	{

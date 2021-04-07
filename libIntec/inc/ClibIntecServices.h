@@ -23,8 +23,10 @@ class ClibIntecServices
 public:
 	ClibIntecServices(IntecUsbDeviceType dev);
 	ClibIntecServices(IntecUsbDeviceType dev, uint32_t numOfDevices, char **HostName);
+
+	virtual ~ClibIntecServices();
+
 	const int32_t Initialize(void);
-	virtual ~ClibIntecServices() {}
 	virtual uint32_t GetUSBDevicesCount(){return m_DevCount;}
 	std::map<IntecUsbDeviceType, std::pair<uint16_t, uint16_t>> m_DevTypeToVidPid =
 	{
