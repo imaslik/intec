@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include "libIntec.h"
 #include <libusb-1.0/libusb.h>
+#include "ClibIntecDevice.h"
 
 #define USB_READ_WRITE_TIMEOUT_MS 10000
 
@@ -21,7 +22,8 @@ typedef struct _USB_TRANS {
 	unsigned char Data[256];
 } USB_TRANS, *PUSB_TRANS;
 
-class ClibIntecUsbDevice {
+class ClibIntecUsbDevice : public  ClibIntecDevice
+{
 public:
 	ClibIntecUsbDevice();
 	ClibIntecUsbDevice(IntecUsbDeviceType devType, uint32_t devIndex, IntecDeviceOperationMode mode, IntecDeviceDriverType driverType);

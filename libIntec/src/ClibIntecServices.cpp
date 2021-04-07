@@ -19,7 +19,7 @@ ClibIntecDevice* InstantiateIntecDevice(IntecDeiceType DeviceType)
 	case Usb:
 		return new ClibIntecUsbDevice();
 	default:
-		return ERROR_NO_DEVICE;
+		return NULL;
 	}
 }
 ClibIntecServices* InstantiateIntecServices(IntecUsbDeviceType dev)

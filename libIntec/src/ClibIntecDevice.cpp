@@ -2,7 +2,7 @@
  * ClibIntecDevice.cpp
  *
  *  Created on: Apr 6, 2021
- *      Author: svshared
+ *      Author: Shady Ganem <shady.ganem@intel.com>
  */
 
 #include "ClibIntecDevice.h"

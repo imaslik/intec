@@ -14,12 +14,6 @@
 #define ERROR_LIBUSB_FAIL       3
 #define ERROR_NO_DEVICE         4
 
-static const char *IntecH_VIDPID="vid_04d8&pid_0053";
-static const char *IntecD_VIDPID="vid_04d8&pid_0054";
-static const char *TAU_VIDPID="vid_04d8&pid_fce7";
-static const char *TAU_INENDPOINT="\\MCHP_EP1";
-static const char *TAU_OUTENDPOINT="\\MCHP_EP1";
-
 enum IntecUsbDeviceType
 {
 	IntecH,

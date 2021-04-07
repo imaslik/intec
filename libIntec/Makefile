@@ -1,18 +1,29 @@
-CC= g++
-FLAGS= -Wall 
-LDLIBUSB= `pkg-config --libs --cflags libusb-1.0`
-INC= -I../inc
-DEP= inc/*.h src/*.cpp
+CC=g++
+FLAGS=-Wall 
+LDLIBUSB=$(shell pkg-config --libs --cflags libusb-1.0)
 
-all: lib/libIntec.so
+SRC=src
+INC=inc
+BIN=bin
+LIB=lib
 
-lib/libIntec.so: bin/libIntec.o
-	$(CC) -shared $(FLAGS) -fPIC -o $@ $^
-	cp inc/libIntec.h lib/libIntec.h
+SRCS=$(wildcard $(SRC)/*.cpp)
+HDRS=$(wildcard $(INC)/*.h)
+OBJS=$(patsubst $(SRC)/%.cpp, $(BIN)/%.o, $(SRCS))
+
+TARGET= $(LIB)/libIntec.so
+
+all: $(TARGET)
+
+$(TARGET): $(OBJS)
+	$(CC) $(FLAGS) -shared -fPIC -lc $^ -o $@ 
+	cp $(INC)/libIntec.h $(LIB)/libIntec.h
 	
-bin/libIntec.o: $(DEP)
-	$(CC) $(FLAGS) $(LDLIBUSB) $(INC) -o $@ $(DEP)
-
+$(BIN)/%.o: $(SRC)/%.cpp $(INC)/%.h
+	$(CC) $(FLAGS) -c $^ $(LDLIBUSB) -I$(INC) -o $@ 
+ 
 clean:
+	rm -rf *.o
 	rm -rf bin/*.o
 	rm -rf lib/*.so lib/*.h
+ 
