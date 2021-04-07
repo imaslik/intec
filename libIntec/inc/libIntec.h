@@ -43,6 +43,27 @@ enum IntecDeviceDriverType
 	libusb
 };
 
+enum IntecTemperatureCalcType
+{
+	Avg=0,
+	Max,
+	Min,
+	AAMax,
+	AAMin,
+	CaseWithOffsetType
+};
+
+enum IntecTemperatureSourceType
+{
+	DefaultSrc=0,
+	Tc,
+	Tj,
+	Tp,
+	PowerFollowing,
+	CaseWithOffsetSrc,
+	Gang
+};
+
 int libIntec_Initialize(IntecUsbDeviceType dev);
 int libIntec_Exit(void);
 int libIntec_InitializeOverNetwork(IntecUsbDeviceType dev, uint32_t numOfDevices, char **HostName);
@@ -50,6 +71,12 @@ int libtIntec_GetNumOfUsbDevices(int&);
 int libIntec_GetDeviceMode(int index, IntecDeviceOperationMode &mode);
 int libIntec_SetDeviceMode(int index, IntecDeviceOperationMode mode);
 int libIntec_GetDeviceName(int index, char* Buffer);
-
+int libIntec_InitializeCard(unsigned int index);
+int libIntec_InitializeCardNoReset(unsigned int index);
+int libIntec_GetTemperature(unsigned int index);
+int libIntec_SetTemperature(unsigned int index, int cardId, float Temp);
+int libIntex_SetFeedBackControlParameter(unsigned int index, int cardId, IntecTemperatureCalcType calcMode, IntecTemperatureSourceType srcType, int mask);
+int libIntec_SetCaseInput(unsigned int index, int cardId, bool enable, int mask);
+int libintec_GetIntecLastError();
 
 #endif //INC_LIBINTEC_H_

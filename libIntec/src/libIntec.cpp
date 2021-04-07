@@ -5,7 +5,6 @@
  *      Author: Shady Ganem <shady.ganem@intel.com>
  */
 
-
 #include "libIntec.h"
 #include <mutex>
 #include "ClibIntecException.h"
@@ -109,5 +108,41 @@ int libIntec_SetDeviceMode(int index, IntecDeviceOperationMode mode)
 
 int libIntec_GetDeviceName(int index, char* Buffer)
 {
-
+	return STATUS_OK;
 }
+
+int libIntec_InitializeCard(unsigned int index)
+{
+	return STATUS_OK;
+}
+
+int libIntec_InitializeCardNoReset(unsigned int index)
+{
+	return STATUS_OK;
+}
+
+int libIntec_GetTemperature(unsigned int index)
+{
+	return STATUS_OK;
+}
+
+int libIntec_SetTemperature(unsigned int index, int cardId, float Temp)
+{
+	return STATUS_OK;
+}
+
+int libIntex_SetFeedBackControlParameter(unsigned int index, int cardId, IntecTemperatureCalcType calcMode, IntecTemperatureSourceType srcType, int mask)
+{
+	return STATUS_OK;
+}
+
+int libIntec_SetCaseInput(unsigned int index, int cardId, bool enable, int mask)
+{
+	return STATUS_OK;
+}
+
+int libintec_GetIntecLastError()
+{
+	return STATUS_OK;
+}
+
