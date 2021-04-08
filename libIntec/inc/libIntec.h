@@ -15,6 +15,8 @@
 #define ERROR_NO_DEVICE 4
 #define ERROR_USB_OPEN_FAIL 5
 
+#define DBG(x) std::cout << "DEBUG PRINT: " << x << std::endl;
+
 enum IntecUsbDeviceType
 {
 	IntecH,

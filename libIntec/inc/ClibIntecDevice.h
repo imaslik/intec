@@ -29,7 +29,6 @@ public:
 	virtual int32_t SetDeviceMode(IntecDeviceOperationMode)=0;
 	virtual int GetConfiguration(){return ERROR_NOT_IMPLEMETED;}
 	virtual int32_t SetConfiguration(int config){return ERROR_NOT_IMPLEMETED;}
-	virtual int32_t SetVidPid(uint16_t vid, uint16_t pid){return ERROR_NOT_IMPLEMETED;}
 	virtual void SetDeviceReference(libusb_device*){}
 	virtual int32_t GetPortNumber(){return ERROR_NOT_IMPLEMETED;}
 

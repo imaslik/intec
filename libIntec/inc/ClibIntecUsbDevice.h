@@ -42,7 +42,6 @@ public:
 	virtual IntecDeviceOperationMode GetDeviceOperationMode(){return UndefinedOpMode;}
 	virtual int GetConfiguration();
 	virtual int32_t SetConfiguration(int config);
-	virtual int32_t SetVidPid(uint16_t vid, uint16_t pid);
 	virtual void SetDeviceReference(libusb_device* usb_dev);
 	virtual int32_t GetPortNumber();
 
@@ -54,12 +53,12 @@ public:
 	libusb_device_handle* m_usb_device_handle = NULL;
 	uint16_t m_vid;
 	uint16_t m_pid;
-	int m_interface_nubmer;
+	int m_interface_nubmer=0;
 	libusb_speed m_usb_speed;
 	uint8_t m_usb_bus_number;
 	uint8_t m_usb_port_number;
 	uint8_t m_usb_port_numbers[MAX_PORT_DEPTH];
-	int m_usb_port_nubers_len = 0;
+	int m_usb_port_numbers_len = 0;
 	uint8_t m_usb_device_address;
 	int m_usb_device_speed;
 	int m_usb_max_packet_size;
@@ -69,11 +68,11 @@ public:
 	libusb_descriptor_type m_usb_desc_type;
 
 	//USB descriptors
-	libusb_device_descriptor m_usb_devcie_desc;
+	libusb_device_descriptor m_usb_device_desc;
 	libusb_endpoint_descriptor m_usb_endpoint_desc;
 	libusb_interface_descriptor m_usb_interface_desc;
 	libusb_interface m_usb_interface;
-	libusb_config_descriptor *m_usb_config_descs;
+	libusb_config_descriptor *m_usb_config_desc;
 	libusb_ss_endpoint_companion_descriptor m_usb_companion_desc;
 	libusb_bos_dev_capability_descriptor m_usb_bos_dev_desc;
 	libusb_bos_descriptor m_usb_bos_desc;
@@ -97,6 +96,7 @@ protected:
 
 
 	bool m_device_open_flag = false;
+	bool m_device_connect_flag = false;
 	IntecDeviceOperationMode m_DeviceOpMode;
 	IntecUsbDeviceType m_DeviceType;
 	unsigned long m_DeviceIndex;

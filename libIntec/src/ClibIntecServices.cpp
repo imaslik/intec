@@ -34,8 +34,6 @@ ClibIntecServices* InstantiateIntecServicesOverEthernet(IntecUsbDeviceType dev,u
 
 void DeleteIntecServices(ClibIntecServices* services)
 {
-
-	std::cout << "count before calling delete ------------- " << services->m_DevCount << std::endl;
 	delete services;
 }
 
@@ -63,7 +61,6 @@ ClibIntecServices::~ClibIntecServices()
 {
 	for (int i=(int)m_DevCount; i > 0 ; i--)
 	{
-		std::cout << "calling devcie distrucor" << std::endl;
 		delete m_Devices[i];
 	}
 	libusb_free_device_list(m_libusb_devv, 1);
@@ -82,7 +79,6 @@ int32_t ClibIntecServices::Exit(void)
 		m_Devices[i]->Diconnect();
 		m_Devices[i]->Close();
 	}
-
 	return STATUS_OK;
 }
 
@@ -151,31 +147,32 @@ const int32_t ClibIntecServices::InitializeUsbDevices()
 	std::pair<uint16_t, uint16_t> VidPid = m_DevTypeToVidPid[m_DevType];
 	uint16_t VID = VidPid.first;
 	uint16_t PID = VidPid.second;
-
-	for (int i=0; i < m_libusb_devc; i++)
+	int current_index;
+	for (int index = 0; index < m_libusb_devc; index++)
 	{
-		libusb_device *device = m_libusb_devv[i];
+		libusb_device *device = m_libusb_devv[index];
 		libusb_device_descriptor desc;
 		if (libusb_get_device_descriptor(device, &desc) != 0)
 			throw ClibIntecException("libusb_get_device_descriptor failed");
+
 		if (desc.idProduct == PID && desc.idVendor == VID)
 		{
 			if (m_DevCount <= MAX_USB_DEVICES)
 			{
-				m_Devices[m_DevCount] = InstantiateIntecDevice(Usb);
-				if (m_Devices[m_DevCount] == NULL)
+				m_Devices[m_DevCount++] = InstantiateIntecDevice(Usb);
+				current_index = m_DevCount-1;
+				if (m_Devices[current_index] == NULL)
 					throw ClibIntecException("failed to allocate USB device ");
-				m_Devices[m_DevCount++]->SetVidPid(desc.idVendor, desc.idProduct);
-				m_Devices[m_DevCount-1]->SetDeviceReference(device);
-				m_Devices[m_DevCount-1]->InitializeDevice(m_DevCount-1);
 
-				if (!m_Devices[m_DevCount-1]->Open())
+				m_Devices[current_index]->SetDeviceReference(device);
+				m_Devices[current_index]->InitializeDevice(current_index);
+
+				if (m_Devices[current_index]->Open() != STATUS_OK)
 					throw ClibIntecException("failed to open usb devcie");
 
-				std::cout << "Debug print: Device was opened " << std::endl;
+				if (m_Devices[current_index]->Connect() != STATUS_OK)
+					throw ClibIntecException("failed to connect to usb device");
 
-//				if (!m_Devices[m_DevCount]->Connect())
-//					throw ClibIntecException("failed to connect to usb device");
 			}
 		}
 	}

@@ -51,7 +51,6 @@ int libIntec_InitializeOverNetwork(IntecUsbDeviceType dev, uint32_t numOfDevices
 
 int libIntec_Exit(void)
 {
-	std::cout << "exit method is called " << std::endl;
 	IntecMutex.lock();
 	libIntecServices->Exit();
 	DeleteIntecServices(libIntecServices);

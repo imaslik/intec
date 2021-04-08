@@ -42,12 +42,11 @@ int32_t ClibIntecUsbDevice::Close()
 {
 	if (m_device_open_flag == true)
 	{
-	if (m_usb_device_handle != NULL)
-	{
-		libusb_close(m_usb_device_handle);
-		std::cout << "device is closed" << std::endl;
-		return STATUS_OK;
-	}
+		if (m_usb_device_handle != NULL)
+		{
+			libusb_close(m_usb_device_handle);
+			return STATUS_OK;
+		}
 	}
 	return ERROR_FAIL;
 }
@@ -60,6 +59,7 @@ int32_t ClibIntecUsbDevice::Connect()
 	if (libusb_claim_interface(m_usb_device_handle, m_interface_nubmer) == 0)
 	{
 		std::cout << "connection succss" << std::endl;
+		m_device_connect_flag = true;
 		return STATUS_OK;
 	}
 	else
@@ -68,17 +68,21 @@ int32_t ClibIntecUsbDevice::Connect()
 
 int32_t ClibIntecUsbDevice::Diconnect()
 {
-	if (m_usb_device_handle != NULL)
+	if (m_device_connect_flag == true)
 	{
-		if (libusb_release_interface(m_usb_device_handle, m_interface_nubmer) == 0)
+		if (m_usb_device_handle != NULL)
 		{
-			std::cout << "disconnection succss" << std::endl;
-			return STATUS_OK;
+			if (libusb_release_interface(m_usb_device_handle, m_interface_nubmer) == 0)
+			{
+				std::cout << "disconnection succss" << std::endl;
+				return STATUS_OK;
+			}
+			else
+				return ERROR_FAIL;
 		}
-		else
-			return ERROR_FAIL;
+		return ERROR_FAIL;
 	}
-	return ERROR_FAIL;
+	return STATUS_OK;
 }
 
 int32_t ClibIntecUsbDevice::Write(unsigned char *szBuffer, uint32_t cbWrite)
@@ -115,30 +119,68 @@ int32_t ClibIntecUsbDevice::Read(unsigned char *szBuffer, uint32_t cbRead)
 
 ClibIntecUsbDevice::~ClibIntecUsbDevice()
 {
-	libusb_free_config_descriptor(m_usb_config_descs);
+	libusb_free_config_descriptor(m_usb_config_desc);
 }
 
 int32_t ClibIntecUsbDevice::InitializeDevice(unsigned int devIndex)
 {
+	std::cout << " ClibIntecUsbDevice::InitializeDevice is called " << std::endl;
 	m_DeviceIndex = devIndex;
 	if (m_usb_device != NULL)
 	{
 		m_usb_bus_number = libusb_get_bus_number(m_usb_device);
-		std::cout << "device bus number " << (int)m_usb_bus_number << std::endl;
 		m_usb_port_number = libusb_get_port_number(m_usb_device);
-		std::cout << "device port number " << (int)m_usb_port_number << std::endl;
-		m_usb_port_nubers_len = libusb_get_port_numbers(m_usb_device, m_usb_port_numbers, MAX_PORT_DEPTH);
-		std::cout << "device port number len " << m_usb_port_nubers_len << std::endl;
+		m_usb_port_numbers_len = libusb_get_port_numbers(m_usb_device, m_usb_port_numbers, MAX_PORT_DEPTH);
 		m_usb_device_address = libusb_get_device_address(m_usb_device);
-		std::cout << "device address  " << (int)m_usb_device_address << std::endl;
 		m_usb_device_speed = libusb_get_device_speed(m_usb_device);
 
-
-		if (libusb_get_device_descriptor(m_usb_device, &m_usb_devcie_desc) != 0)
+		if (libusb_get_device_descriptor(m_usb_device, &m_usb_device_desc) != 0)
 			return ERROR_FAIL;
 
-		if (libusb_get_active_config_descriptor(m_usb_device, &m_usb_config_descs) != 0)
+		//iterating over the usb device tree
+		if (libusb_get_config_descriptor(m_usb_device, 0, &m_usb_config_desc) != 0)
+		{
 			return ERROR_FAIL;
+		}
+
+		std::cout << "m_usb_config_desc is set " << std::endl;
+		uint8_t m_bNumInterfaces = 0;
+		//iterating over the usb device tree
+		if (m_usb_config_desc != NULL)
+		{
+			m_bNumInterfaces = m_usb_config_desc->bNumInterfaces;
+			std::cout << "num of interfaces found ---- " << (int)m_bNumInterfaces << std::endl;
+			libusb_interface usb_interface;
+			libusb_interface_descriptor usb_interface_desc;
+			libusb_endpoint_descriptor usb_endpoint_desc;
+			//iterating over the interfaces in config index 0
+			for (int i = 0; i < (int)m_bNumInterfaces; i++)
+			{
+				usb_interface = m_usb_config_desc->interface[i];
+				int num_of_alt_settings = usb_interface.num_altsetting;
+				std::cout << "num of alternative settings for currnet interface ---- " << num_of_alt_settings << std::endl;
+				// iterating over the
+				for (int j = 0; j < num_of_alt_settings; j++)
+				{
+					usb_interface_desc = usb_interface.altsetting[j];
+					uint8_t m_bNumEndpoints = usb_interface_desc.bNumEndpoints;
+					for (int k = 0; k < (int)m_bNumEndpoints; k++)
+					{
+						usb_endpoint_desc = usb_interface_desc.endpoint[k];
+						std::cout << "endpint address " << (int)usb_endpoint_desc.bEndpointAddress << std::endl;
+						std::cout << "endpint maxPacketsize" << (int)usb_endpoint_desc.wMaxPacketSize << std::endl;
+					}
+
+				}
+			}
+		}
+		libusb_free_config_descriptor(m_usb_config_desc);
+
+
+
+
+//		if (libusb_get_active_config_descriptor(m_usb_device, &m_usb_config_descs) != 0)
+//			return ERROR_FAIL;
 
 
 		//TODO the values of the endpiont addresses must be dynammically determened during device enumeration
@@ -177,13 +219,6 @@ int32_t ClibIntecUsbDevice::SetConfiguration(int config)
 		return STATUS_OK;
 	else
 		return ERROR_FAIL;
-}
-
-int32_t ClibIntecUsbDevice::SetVidPid(uint16_t vid, uint16_t pid)
-{
-	m_vid = vid;
-	m_pid = pid;
-	return STATUS_OK;
 }
 
 void ClibIntecUsbDevice::SetDeviceReference(libusb_device * usb_device)
