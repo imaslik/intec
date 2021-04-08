@@ -34,11 +34,19 @@ int test_main(int argc, char ** argvv)
 	else
 	{
 		std::cout << "TEST PASS - libtIntec_GetNumOfUsbDevices" << std::endl;
-		std::cout << "number of devices found on this machine " << num_of_devices << std::endl;
 	}
 
-
-
+	for (int i=0; i < num_of_devices; i++)
+	{
+		if (libIntec_InitializeCard(0) != STATUS_OK)
+		{
+			std::cout << "TEST FAIL: libIntec_InitializeCard return error" << std::endl;
+		}
+		else
+		{
+			std::cout << "TEST PASS - libIntec_InitializeCard" << std::endl;
+		}
+	}
 
 	libIntec_Exit();
 	return 0;

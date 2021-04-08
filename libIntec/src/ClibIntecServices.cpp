@@ -32,6 +32,10 @@ ClibIntecServices* InstantiateIntecServicesOverEthernet(IntecUsbDeviceType dev,u
 	return new ClibIntecServices(dev, numOfDevices, devicesAddress);
 }
 
+ClibIntecOperations* InstantiateIntecOperations(unsigned int index)
+{
+	return new ClibIntecOperations(index);
+}
 void DeleteIntecServices(ClibIntecServices* services)
 {
 	delete services;
@@ -62,6 +66,7 @@ ClibIntecServices::~ClibIntecServices()
 	for (int i=(int)m_DevCount; i > 0 ; i--)
 	{
 		delete m_Devices[i];
+		delete m_Operations[i];
 	}
 	libusb_free_device_list(m_libusb_devv, 1);
 	libusb_exit(m_libusb_ctx);
@@ -72,9 +77,10 @@ void ClibIntecServices::Initialize()
 	InitializeLibusb();
 	InitializeUsbDevices();
 }
+
 int32_t ClibIntecServices::Exit(void)
 {
-	for (int i=0; i< (int)m_DevCount;i++)
+	for (int i=0; i < (int)m_DevCount;i++)
 	{
 		m_Devices[i]->Diconnect();
 		m_Devices[i]->Close();
@@ -159,19 +165,23 @@ const int32_t ClibIntecServices::InitializeUsbDevices()
 		{
 			if (m_DevCount <= MAX_USB_DEVICES)
 			{
-				m_Devices[m_DevCount++] = InstantiateIntecDevice(Usb);
-				current_index = m_DevCount-1;
+				current_index = m_DevCount;
+				m_Devices[current_index] = InstantiateIntecDevice(Usb);
+				m_DevCount++;
 				if (m_Devices[current_index] == NULL)
-					throw ClibIntecException("failed to allocate USB device ");
+					throw ClibIntecException("Failed to allocate USB device ");
+				m_Operations[current_index] = InstantiateIntecOperations(current_index);
+				if (m_Operations[current_index] == NULL)
+					throw ClibIntecException("Failed to allocate Operations object");
 
 				m_Devices[current_index]->SetDeviceReference(device);
 				m_Devices[current_index]->InitializeDevice(current_index);
 
 				if (m_Devices[current_index]->Open() != STATUS_OK)
-					throw ClibIntecException("failed to open usb devcie");
+					throw ClibIntecException("Failed to open usb devcie");
 
 				if (m_Devices[current_index]->Connect() != STATUS_OK)
-					throw ClibIntecException("failed to connect to usb device");
+					throw ClibIntecException("Failed to connect to usb device");
 
 			}
 		}

@@ -23,9 +23,10 @@ int libIntec_Initialize(IntecUsbDeviceType dev)
 		IntecMutex.unlock();
 		return STATUS_OK;
 	}
-	catch (...)
+	catch (std::exception& e)
 	{
 		IntecMutex.unlock();
+		libIntecServices->SetLastError(e.what());
 		return ERROR_FAIL;
 	}
 }
@@ -42,9 +43,10 @@ int libIntec_InitializeOverNetwork(IntecUsbDeviceType dev, uint32_t numOfDevices
 		IntecMutex.unlock();
 		return STATUS_OK;
 	}
-	catch (...)
+	catch (std::exception& e)
 	{
 		IntecMutex.unlock();
+		libIntecServices->SetLastError(e.what());
 		return ERROR_FAIL;
 	}
 }
@@ -67,9 +69,28 @@ int libtIntec_GetNumOfUsbDevices(int& number_devices_found)
 		IntecMutex.unlock();
 		return STATUS_OK;
 	}
+	catch (std::exception& e)
+	{
+		IntecMutex.unlock();
+		libIntecServices->SetLastError(e.what());
+		return ERROR_FAIL;
+	}
+}
+
+int libIntec_ReadDeviceByAddr(unsigned int index, unsigned int addr, unsigned char *szBuffer, unsigned int *cbRead)
+{
+	int res;
+	try
+	{
+		IntecMutex.lock();
+		res = libIntecServices->m_Devices[index]->Read(addr, szBuffer, cbRead);
+		IntecMutex.unlock();
+		if (res != STATUS_OK)
+			return (int)res;
+		return STATUS_OK;
+	}
 	catch (...)
 	{
-		std::cout << "exception raised in GETNumOfUsbDevices" << std::endl;
 		IntecMutex.unlock();
 		return ERROR_FAIL;
 	}
@@ -127,12 +148,14 @@ int libIntec_InitializeCard(unsigned int index)
 	try
 	{
 		IntecMutex.lock();
+		libIntecServices->m_Operations[index]->Initialize(1);
 		IntecMutex.unlock();
 		return STATUS_OK;
 	}
-	catch (...)
+	catch (std::exception& e)
 	{
 		IntecMutex.unlock();
+		libIntecServices->SetLastError(e.what());
 		return ERROR_FAIL;
 	}
 }
@@ -145,9 +168,10 @@ int libIntec_InitializeCardNoReset(unsigned int index)
 		IntecMutex.unlock();
 		return STATUS_OK;
 	}
-	catch (...)
+	catch (std::exception& e)
 	{
 		IntecMutex.unlock();
+		libIntecServices->SetLastError(e.what());
 		return ERROR_FAIL;
 	}
 }
@@ -205,9 +229,10 @@ int libIntec_SetCaseInput(unsigned int index, int cardId, bool enable, int mask)
 		IntecMutex.unlock();
 		return STATUS_OK;
 	}
-	catch (...)
+	catch (std::exception& e)
 	{
 		IntecMutex.unlock();
+		libIntecServices->SetLastError(e.what());
 		return ERROR_FAIL;
 	}
 }

@@ -12,6 +12,8 @@
 #include <stdint.h>
 #include "libIntec.h"
 #include "ClibIntecDevice.h"
+#include "ClibIntecOperations.h"
+#include "ClibIntecOperations.h"
 #include <libusb-1.0/libusb.h>
 #include <map>
 #include <cstdint>
@@ -44,6 +46,7 @@ public:
 public:
 	uint32_t m_DevCount;
 	ClibIntecDevice *m_Devices[MAX_USB_DEVICES];
+	ClibIntecOperations *m_Operations[MAX_USB_DEVICES];
 	char m_MsgBuffer[512];
 	IntecUsbDeviceType m_DevType;
 
@@ -68,6 +71,7 @@ private:
 };
 
 ClibIntecServices* InstantiateIntecServices(IntecUsbDeviceType dev);
+ClibIntecOperations* InstantiateIntecOperations(unsigned int index);
 void DeleteIntecServices(ClibIntecServices* services);
 //ClibIntecServices* InstantiateIntecServicesOverEthernet(IntecUsbDeviceType dev,uint32_t numOfDevices, char **devicesAddress);
 ClibIntecDevice* InstantiateIntecDevice(IntecDeviceType DeviceType);

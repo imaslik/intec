@@ -21,14 +21,11 @@ ClibIntecUsbDevice::ClibIntecUsbDevice(IntecUsbDeviceType devType, uint32_t devI
 
 int32_t ClibIntecUsbDevice::Open()
 {
-
-	std::cout << "trying to open usb device" << std::endl;
 	if (m_usb_device == NULL)
 		throw ClibIntecException("error at USB device open. libusb device not present");
 
 	if (libusb_open(m_usb_device, &m_usb_device_handle) == 0)
 	{
-		std::cout << "device open is successfull" << std::endl;
 		m_device_open_flag = true;
 		return STATUS_OK;
 	}
@@ -58,7 +55,6 @@ int32_t ClibIntecUsbDevice::Connect()
 
 	if (libusb_claim_interface(m_usb_device_handle, m_interface_nubmer) == 0)
 	{
-		std::cout << "connection succss" << std::endl;
 		m_device_connect_flag = true;
 		return STATUS_OK;
 	}
@@ -74,7 +70,6 @@ int32_t ClibIntecUsbDevice::Diconnect()
 		{
 			if (libusb_release_interface(m_usb_device_handle, m_interface_nubmer) == 0)
 			{
-				std::cout << "disconnection succss" << std::endl;
 				return STATUS_OK;
 			}
 			else
@@ -117,6 +112,94 @@ int32_t ClibIntecUsbDevice::Read(unsigned char *szBuffer, uint32_t cbRead)
 	return STATUS_OK;
 }
 
+int32_t ClibIntecUsbDevice::Write(uint32_t addr, unsigned char *szBuffer, uint32_t cbSize)
+{
+	//Host to device write command
+	//Cmd Type	          Register Address 				   DataLen	 			Data
+	//0x01 (Wr)		       ID [31:16], Offset [15:0]
+    //1Byte	                4 Bytes							1 Byte	          �DataLen� Bytes
+
+	unsigned int currIndex = 0;
+	unsigned char sendBuffer[MAX_WRITE_PKT_SIZE];
+	// Split data to 64 bytes sized packets (Microchip f/w limitation)
+	while (currIndex < cbSize)
+	{
+		unsigned char currPktSize = (unsigned char)((PKT_HEADER_LENGTH + cbSize - currIndex >= MAX_WRITE_PKT_SIZE) ? MAX_WRITE_PKT_SIZE :
+		PKT_HEADER_LENGTH + cbSize - currIndex);
+
+		// Prepare data for sending
+
+		sendBuffer[0] = USB_WRITE_WORD_COMMAND;
+		memcpy(&sendBuffer[1], (unsigned char*)&addr,REG_WIDTH);
+		sendBuffer[5] = *(unsigned char*)&currPktSize-PKT_HEADER_LENGTH;
+
+		memcpy(sendBuffer+PKT_HEADER_LENGTH,szBuffer+currIndex,currPktSize - PKT_HEADER_LENGTH);
+
+		if(Write(sendBuffer, currPktSize))
+			currIndex += currPktSize-PKT_HEADER_LENGTH;
+		else
+			return ERROR_FAIL;
+	}
+	return STATUS_OK;
+}
+
+int32_t ClibIntecUsbDevice::Read(uint32_t addr, unsigned char *szBuffer, uint32_t *cbSize)
+{
+	unsigned int actualTReadSize =*cbSize;
+	unsigned char sendBuffer[PKT_HEADER_LENGTH];
+	sendBuffer[0] = USB_READ_WORD_COMMAND;
+	memcpy(&sendBuffer[1], (unsigned char*)&addr,REG_WIDTH);
+	sendBuffer[5] = *cbSize;
+	unsigned char internalReadBuff[MAX_READ_PKT_SIZE];
+	if(!WriteAndRead(sendBuffer,PKT_HEADER_LENGTH, internalReadBuff, &actualTReadSize))
+		return ERROR_FAIL;
+	else
+	{
+		memcpy(szBuffer,internalReadBuff,min(*cbSize,actualTReadSize)); // take the min to preven memory crash
+		return STATUS_OK;
+	}
+}
+
+int32_t ClibIntecUsbDevice::WriteAndRead(unsigned char *writeBuffer,unsigned int writeSize, unsigned char *readBuffer, unsigned int * readSize)
+{
+
+	unsigned int reqToRead = *readSize;
+	int rc;
+
+	rc = Write(writeBuffer, writeSize);
+	if (rc != STATUS_OK)
+		return rc;
+
+	rc = Read(readBuffer, reqToRead);
+	if (rc != STATUS_OK)
+		return rc;
+
+	if(reqToRead < PKT_HEADER_LENGTH)
+	{
+		return ERROR_FAIL;
+	}
+
+	unsigned char status = readBuffer[0];
+	if(!(status &0x1))
+	{
+		return ERROR_FAIL;
+	}
+
+	if((status &0x4))
+	{
+		return ERROR_FAIL;
+	}
+
+	if (!(status &0x2))
+
+
+	*readSize = readBuffer[PKT_HEADER_LENGTH-1];
+	// copy only the DATA - remove the header
+	memcpy(readBuffer,&readBuffer[PKT_HEADER_LENGTH],min(*readSize,MAX_READ_PKT_SIZE-PKT_HEADER_LENGTH));
+
+	return STATUS_OK;
+}
+
 ClibIntecUsbDevice::~ClibIntecUsbDevice()
 {
 	libusb_free_config_descriptor(m_usb_config_desc);
@@ -124,7 +207,6 @@ ClibIntecUsbDevice::~ClibIntecUsbDevice()
 
 int32_t ClibIntecUsbDevice::InitializeDevice(unsigned int devIndex)
 {
-	std::cout << " ClibIntecUsbDevice::InitializeDevice is called " << std::endl;
 	m_DeviceIndex = devIndex;
 	if (m_usb_device != NULL)
 	{
@@ -137,56 +219,53 @@ int32_t ClibIntecUsbDevice::InitializeDevice(unsigned int devIndex)
 		if (libusb_get_device_descriptor(m_usb_device, &m_usb_device_desc) != 0)
 			return ERROR_FAIL;
 
+		m_vid = m_usb_device_desc.idVendor;
+		m_pid = m_usb_device_desc.idProduct;
 		//iterating over the usb device tree
 		if (libusb_get_config_descriptor(m_usb_device, 0, &m_usb_config_desc) != 0)
 		{
 			return ERROR_FAIL;
 		}
-
-		std::cout << "m_usb_config_desc is set " << std::endl;
 		uint8_t m_bNumInterfaces = 0;
 		//iterating over the usb device tree
 		if (m_usb_config_desc != NULL)
 		{
 			m_bNumInterfaces = m_usb_config_desc->bNumInterfaces;
-			std::cout << "num of interfaces found ---- " << (int)m_bNumInterfaces << std::endl;
 			libusb_interface usb_interface;
 			libusb_interface_descriptor usb_interface_desc;
 			libusb_endpoint_descriptor usb_endpoint_desc;
+			uint8_t m_bNumEndpoints;
+			uint8_t l_endpoint_addr = 0;
 			//iterating over the interfaces in config index 0
 			for (int i = 0; i < (int)m_bNumInterfaces; i++)
 			{
 				usb_interface = m_usb_config_desc->interface[i];
 				int num_of_alt_settings = usb_interface.num_altsetting;
-				std::cout << "num of alternative settings for currnet interface ---- " << num_of_alt_settings << std::endl;
 				// iterating over the
 				for (int j = 0; j < num_of_alt_settings; j++)
 				{
 					usb_interface_desc = usb_interface.altsetting[j];
-					uint8_t m_bNumEndpoints = usb_interface_desc.bNumEndpoints;
+					m_bNumEndpoints = usb_interface_desc.bNumEndpoints;
 					for (int k = 0; k < (int)m_bNumEndpoints; k++)
 					{
 						usb_endpoint_desc = usb_interface_desc.endpoint[k];
-						std::cout << "endpint address " << (int)usb_endpoint_desc.bEndpointAddress << std::endl;
-						std::cout << "endpint maxPacketsize" << (int)usb_endpoint_desc.wMaxPacketSize << std::endl;
+						l_endpoint_addr = usb_endpoint_desc.bEndpointAddress;
+						if (l_endpoint_addr & 0x80)
+						{
+							//bit 7 is set -> IN endpoint
+							m_usb_in_endpoint_addr = l_endpoint_addr;
+							m_usb_max_in_packet_size = usb_endpoint_desc.wMaxPacketSize;
+						}
+						else
+						{
+							m_usb_out_endpoint_addr = l_endpoint_addr;
+							m_usb_max_out_packet_size = usb_endpoint_desc.wMaxPacketSize;
+						}
 					}
-
 				}
 			}
 		}
 		libusb_free_config_descriptor(m_usb_config_desc);
-
-
-
-
-//		if (libusb_get_active_config_descriptor(m_usb_device, &m_usb_config_descs) != 0)
-//			return ERROR_FAIL;
-
-
-		//TODO the values of the endpiont addresses must be dynammically determened during device enumeration
-		// to verfiy that the values are ok compare to output of - sudo lsusb -v -d 04d8:0053
-		m_usb_out_endpoint_addr = 0x01;
-		m_usb_in_endpoint_addr = 0x81;
 
 		return STATUS_OK;
 	}

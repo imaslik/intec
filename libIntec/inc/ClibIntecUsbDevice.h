@@ -13,6 +13,9 @@
 #include <libusb-1.0/libusb.h>
 #include "ClibIntecDevice.h"
 #include "ClibIntecException.h"
+#include "libIntec_PECIModule_DwDefs.h"
+
+#define min(a,b) (((a) < (b)) ? (a) : (b))
 
 #define USB_READ_WRITE_TIMEOUT_MS 10000
 #define MAX_PORT_DEPTH 7
@@ -37,8 +40,9 @@ public:
 	virtual int32_t Diconnect();
 	virtual int32_t Write(unsigned char *szBuffer, uint32_t cbSize);
 	virtual int32_t Read(unsigned char *szBuffer, uint32_t cbRead);
-	virtual int32_t Write(uint32_t addr, unsigned char *szBuffer, uint32_t cbSize){return STATUS_OK;}
-	virtual int32_t Read(uint32_t addr, unsigned char *szBuffer, uint32_t *cbSize){return STATUS_OK;}
+	virtual int32_t Write(uint32_t addr, unsigned char *szBuffer, uint32_t cbSize);
+	virtual int32_t Read(uint32_t addr, unsigned char *szBuffer, uint32_t *cbSize);
+	virtual int32_t WriteAndRead(unsigned char * writeBuffer,unsigned int writeSize, unsigned char * readBuffer, unsigned int * readSize);
 	virtual IntecDeviceOperationMode GetDeviceOperationMode(){return UndefinedOpMode;}
 	virtual int GetConfiguration();
 	virtual int32_t SetConfiguration(int config);
@@ -89,11 +93,10 @@ protected:
 	bool QueryDeviceEndpoints(unsigned long TimeOutMSec){return true;}
 
 protected:
-
-	//TODO the values of the endpiont addresses must be dynammically determened during device enumeration
-	unsigned char m_usb_out_endpoint_addr = 0x01;
-	unsigned char m_usb_in_endpoint_addr = 0x81;
-
+	uint8_t m_usb_out_endpoint_addr;
+	uint8_t m_usb_in_endpoint_addr;
+	uint16_t m_usb_max_in_packet_size;
+	uint16_t m_usb_max_out_packet_size;
 
 	bool m_device_open_flag = false;
 	bool m_device_connect_flag = false;

@@ -11,6 +11,7 @@
 #include <iostream>
 #include "libIntec.h"
 #include <libusb-1.0/libusb.h>
+#include <cstring>
 
 class ClibIntecDevice {
 public:
@@ -23,8 +24,9 @@ public:
 	virtual int32_t Diconnect()=0;
 	virtual int32_t Write(unsigned char *szBuffer, uint32_t cbSize)=0;
 	virtual int32_t Read(unsigned char *szBuffer, uint32_t cbRead)=0;
-	virtual int32_t Write(uint32_t addr, unsigned char *szBuffer, uint32_t cbSize)=0;
-	virtual int32_t Read(uint32_t addr, unsigned char *szBuffer, uint32_t *cbSize)=0;
+	virtual int32_t Write(unsigned int addr, unsigned char *szBuffer, uint32_t cbSize)=0;
+	virtual int32_t Read(unsigned int addr, unsigned char *szBuffer, uint32_t *cbSize)=0;
+	virtual int32_t WriteAndRead(unsigned char * writeBuffer,unsigned int writeSize, unsigned char * readBuffer, unsigned int * readSize)=0;
 	virtual IntecDeviceOperationMode GetDeviceMode()=0;
 	virtual int32_t SetDeviceMode(IntecDeviceOperationMode)=0;
 	virtual int GetConfiguration(){return ERROR_NOT_IMPLEMETED;}
