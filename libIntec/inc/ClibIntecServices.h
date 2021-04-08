@@ -14,6 +14,9 @@
 #include "ClibIntecDevice.h"
 #include <libusb-1.0/libusb.h>
 #include <map>
+#include <cstdint>
+#include <cstring>
+#include <string>
 
 #define MAX_USB_DEVICES 8
 
@@ -26,13 +29,16 @@ public:
 
 	virtual ~ClibIntecServices();
 
-	const int32_t Initialize(void);
+	virtual void Initialize(void);
+	virtual int32_t Exit(void);
 	virtual uint32_t GetUsbDevicesCount();
+	virtual void SetLastError(const char* err);
+	virtual void GetLastError(char* err, unsigned int length);
 	std::map<IntecUsbDeviceType, std::pair<uint16_t, uint16_t>> m_DevTypeToVidPid =
 	{
 			{IntecH, {0x4d8, 0x53}},
-			{IntecD, {0x4d8, 0x3c}},
-			{TAU, {0x4d8, 0x3c}}
+			{IntecD, {0x4d8, 0x54}},
+			{TAU, {0x4d8, 0xfce7}}
 	};
 
 public:
@@ -42,6 +48,7 @@ public:
 	IntecUsbDeviceType m_DevType;
 
 private:
+	std::string m_LastErrorMsg;
 	//libusb data members
 	libusb_device **m_libusb_devv = NULL;
 	libusb_context *m_libusb_ctx = NULL;

@@ -15,20 +15,19 @@ ClibIntecServices *libIntecServices = NULL;
 
 int libIntec_Initialize(IntecUsbDeviceType dev)
 {
-	IntecMutex.lock();
-	int status;
 	try
 	{
+		IntecMutex.lock();
 		libIntecServices = InstantiateIntecServices(dev);
 		libIntecServices->Initialize();
+		IntecMutex.unlock();
+		return STATUS_OK;
 	}
 	catch (...)
 	{
-		status = ERROR_FAIL;
+		IntecMutex.unlock();
+		return ERROR_FAIL;
 	}
-	status = STATUS_OK;
-	IntecMutex.unlock();
-	return status;
 }
 
 int libIntec_InitializeOverNetwork(IntecUsbDeviceType dev, uint32_t numOfDevices, char **HostName)
@@ -52,7 +51,9 @@ int libIntec_InitializeOverNetwork(IntecUsbDeviceType dev, uint32_t numOfDevices
 
 int libIntec_Exit(void)
 {
+	std::cout << "exit method is called " << std::endl;
 	IntecMutex.lock();
+	libIntecServices->Exit();
 	DeleteIntecServices(libIntecServices);
 	IntecMutex.unlock();
 	return STATUS_OK;
@@ -69,6 +70,7 @@ int libtIntec_GetNumOfUsbDevices(int& number_devices_found)
 	}
 	catch (...)
 	{
+		std::cout << "exception raised in GETNumOfUsbDevices" << std::endl;
 		IntecMutex.unlock();
 		return ERROR_FAIL;
 	}
@@ -108,41 +110,154 @@ int libIntec_SetDeviceMode(int index, IntecDeviceOperationMode mode)
 
 int libIntec_GetDeviceName(int index, char* Buffer)
 {
-	return STATUS_OK;
+	try
+	{
+		IntecMutex.lock();
+		IntecMutex.unlock();
+		return STATUS_OK;
+	}
+	catch (...)
+	{
+		IntecMutex.unlock();
+		return ERROR_FAIL;
+	}
 }
 
 int libIntec_InitializeCard(unsigned int index)
 {
-	return STATUS_OK;
+	try
+	{
+		IntecMutex.lock();
+		IntecMutex.unlock();
+		return STATUS_OK;
+	}
+	catch (...)
+	{
+		IntecMutex.unlock();
+		return ERROR_FAIL;
+	}
 }
 
 int libIntec_InitializeCardNoReset(unsigned int index)
 {
-	return STATUS_OK;
+	try
+	{
+		IntecMutex.lock();
+		IntecMutex.unlock();
+		return STATUS_OK;
+	}
+	catch (...)
+	{
+		IntecMutex.unlock();
+		return ERROR_FAIL;
+	}
 }
 
 int libIntec_GetTemperature(unsigned int index)
 {
-	return STATUS_OK;
+	try
+	{
+		IntecMutex.lock();
+		IntecMutex.unlock();
+		return STATUS_OK;
+	}
+	catch (...)
+	{
+		IntecMutex.unlock();
+		return ERROR_FAIL;
+	}
 }
 
 int libIntec_SetTemperature(unsigned int index, int cardId, float Temp)
 {
-	return STATUS_OK;
+	try
+	{
+		IntecMutex.lock();
+		IntecMutex.unlock();
+		return STATUS_OK;
+	}
+	catch (...)
+	{
+		IntecMutex.unlock();
+		return ERROR_FAIL;
+	}
 }
 
 int libIntex_SetFeedBackControlParameter(unsigned int index, int cardId, IntecTemperatureCalcType calcMode, IntecTemperatureSourceType srcType, int mask)
 {
-	return STATUS_OK;
+	try
+	{
+		IntecMutex.lock();
+		IntecMutex.unlock();
+		return STATUS_OK;
+	}
+	catch (...)
+	{
+		IntecMutex.unlock();
+		return ERROR_FAIL;
+	}
 }
 
 int libIntec_SetCaseInput(unsigned int index, int cardId, bool enable, int mask)
 {
-	return STATUS_OK;
+	try
+	{
+		IntecMutex.lock();
+		IntecMutex.unlock();
+		return STATUS_OK;
+	}
+	catch (...)
+	{
+		IntecMutex.unlock();
+		return ERROR_FAIL;
+	}
 }
 
-int libintec_GetIntecLastError()
+int libintec_GetLastError(char *buff, unsigned int bufsize)
 {
-	return STATUS_OK;
+	try
+	{
+		IntecMutex.lock();
+		libIntecServices->GetLastError(buff, bufsize);
+		IntecMutex.unlock();
+		return STATUS_OK;
+	}
+	catch (std::exception& e)
+	{
+		IntecMutex.unlock();
+		libIntecServices->SetLastError(e.what());
+		return ERROR_FAIL;
+	}
 }
 
+int libIntec_GetTemperatureSource(unsigned int index, IntecTemperatureSourceType, int *source_size, short* sources, unsigned int *timestamp, int* valid_mask)
+{
+	try
+	{
+		IntecMutex.lock();
+		IntecMutex.unlock();
+		return STATUS_OK;
+	}
+	catch (std::exception& e)
+	{
+		IntecMutex.unlock();
+		libIntecServices->SetLastError(e.what());
+		return ERROR_FAIL;
+	}
+}
+
+int libIntec_GetActualFeedbackType(unsigned int index, int cardId, IntecTemperatureSourceType* actualSrcType)
+{
+	try
+	{
+		IntecMutex.lock();
+		IntecMutex.unlock();
+		return STATUS_OK;
+	}
+	catch (std::exception& e)
+	{
+		IntecMutex.unlock();
+		libIntecServices->SetLastError(e.what());
+		return ERROR_FAIL;
+	}
+}
