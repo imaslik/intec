@@ -2,7 +2,7 @@
  * ClibIntecOperations.cpp
  *
  *  Created on: Apr 8, 2021
- *      Author: svshared
+ *      Author: Shady Ganem <shady.ganem@intel.com> 
  */
 
 #include "ClibIntecOperations.h"
@@ -157,5 +157,69 @@ const int ClibIntecOperations::IntecGetSysCardsConfiguration()
 		InTECDCards_++;
 
 	return true;
+}
 
+const int ClibIntecOperations::IntecSetDiodeInputs(bool enable, unsigned int mask)
+{
+	if(enable)
+		currentDiodeMask_ |=mask;
+	else
+		currentDiodeMask_ &=((~mask)&0xf);
+	UN_DIODE_CFG diode_cfg;
+	writeSize_=sizeof(UN_DIODE_CFG);
+	diode_cfg.fields.PollDiodes=currentDiodeMask_;
+	if(libIntec_WriteDeviceByAddr(deviceIndex_,INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_DIODE_CFG,(UCHAR *)&diode_cfg.value,writeSize_))
+	{
+		return false;
+	}
+	return true;
+
+}
+
+const int ClibIntecOperations::IntecSetPFInputs(bool enable, unsigned int mask)
+{
+	if(enable)
+		currentPFMask_ |=mask;
+	else
+		currentPFMask_ &=((~mask)&0xf);
+
+	UN_PF_CFG pf_cfg;
+	writeSize_=sizeof(UN_PF_CFG);
+	pf_cfg.fields.PollPF=currentPFMask_;
+	if(libIntec_WriteDeviceByAddr(deviceIndex_,INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_PF_CFG,(unsigned char *)&pf_cfg.value,writeSize_))
+	{
+		SetIntecLastError("IntecSetPFInputs: Failed to Write  OFFSET_PF_CFG");
+		return false;
+	}
+	return true;
+}
+
+const int ClibIntecOperations::IntecSetProcHotInputs(bool enable, unsigned int mask)
+{
+	//Clear Prochot status fields for a specific channel by setting the appropriate bit of ChResetCounter field in PROCHOT_CFG register. 
+	if(!IntecClearProcHotEventsCounter(-1))
+		return false;
+	//Select which Prochot input to enable by setting the appropriate bits of the PollProchot field in PROCHOT_CFG register.
+	if(enable)
+		currentProcHOTMask_ |=mask;
+	else
+		currentProcHOTMask_ &=((~mask)&0xf);
+	UN_PROCHOT_CFG prochot_cfg;
+	readSize_=sizeof(UN_PROCHOT_CFG);
+	if(ReadDeviceByAddr(deviceIndex_,INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_PROCHOT_CFG,(unsigned char *)&prochot_cfg.value,&readSize_)!=S_OK)
+	{
+		SetIntecLastError("IntecSetProcHotInputs::Failed to Read OFFSET_PROCHOT_CFG");
+		return false;
+	}
+	prochot_cfg.fields.PollProchot=currentProcHOTMask_;
+
+
+	writeSize_=sizeof(UN_PROCHOT_CFG);;
+
+	if(WriteDeviceByAddr(deviceIndex_,INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_PROCHOT_CFG,(unsigned char *)&prochot_cfg.value,writeSize_))
+	{
+		SetIntecLastError("IntecSetProcHotInputs: Failed to Write  OFFSET_PROCHOT_CFG");
+		return false;
+	}
+	return true;
 }

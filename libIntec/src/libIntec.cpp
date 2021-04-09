@@ -13,6 +13,11 @@
 std::mutex IntecMutex;
 ClibIntecServices *libIntecServices = NULL;
 
+void SetIntecLastError(const char * err)
+{
+	libIntecServices->SetLastError(err);
+}
+
 int libIntec_Initialize(IntecUsbDeviceType dev)
 {
 	try
@@ -84,6 +89,25 @@ int libIntec_ReadDeviceByAddr(unsigned int index, unsigned int addr, unsigned ch
 	{
 		IntecMutex.lock();
 		res = libIntecServices->m_Devices[index]->Read(addr, szBuffer, cbRead);
+		IntecMutex.unlock();
+		if (res != STATUS_OK)
+			return (int)res;
+		return STATUS_OK;
+	}
+	catch (...)
+	{
+		IntecMutex.unlock();
+		return ERROR_FAIL;
+	}
+}
+
+int libIntec_WriteDeviceByAddr(unsigned int index, unsigned int addr, unsigned char *szBuffer, unsigned int *cbRead)
+{
+	int res;
+	try
+	{
+		IntecMutex.lock();
+		res = libIntecServices->m_Devices[index]->Write(addr, szBuffer, *cbRead);
 		IntecMutex.unlock();
 		if (res != STATUS_OK)
 			return (int)res;

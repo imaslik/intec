@@ -157,10 +157,12 @@ enum IntecTCASEType
 };
 
 int libIntec_Initialize(IntecUsbDeviceType dev);
+void SetIntecLastError(const char * err);
 int libIntec_Exit(void);
 int libIntec_InitializeOverNetwork(IntecUsbDeviceType dev, uint32_t numOfDevices, char **HostName);
 int libtIntec_GetNumOfUsbDevices(int&);
 int libIntec_ReadDeviceByAddr(unsigned int index, unsigned int addr, unsigned char *szBuffer, unsigned int *cbRead);
+int libIntec_WriteDeviceByAddr(unsigned int index, unsigned int addr, unsigned char *szBuffer, unsigned int *cbRead);
 int libIntec_GetDeviceMode(int index, IntecDeviceOperationMode &mode);
 int libIntec_SetDeviceMode(int index, IntecDeviceOperationMode mode);
 int libIntec_GetDeviceName(int index, char* Buffer);

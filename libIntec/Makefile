@@ -9,10 +9,10 @@ LIB=lib
 
 SRCS=$(wildcard $(SRC)/*.cpp)
 HDRS=$(wildcard $(INC)/*.h)
+ADD_HDRS=$(INC)/libIntec_InTEC_DeDefs.h $(INC)/
 BINS=$(patsubst $(SRC)/%.cpp, $(BIN)/%.o, $(SRCS))
 
 TARGET= $(LIB)/libIntec.so
-TARGETOBJ=$(BIN)/libIntec.obj
 
 all: $(TARGET)
 
@@ -23,6 +23,9 @@ $(TARGET): $(BINS)
 $(BIN)/%.o: $(SRC)/%.cpp $(INC)/%.h
 	$(CC) -fPIC $(FLAGS) $(LDLIBUSB)-I$(INC) -c $(filter-out %.h, $^) -o $@ 
  
+
+test:
+	make -C tests
 clean:
 	rm -rf bin/*.o
 	rm -rf lib/*.so lib/*.h

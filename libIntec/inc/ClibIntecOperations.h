@@ -106,6 +106,11 @@ public:
 	virtual ~ClibIntecOperations();
 	virtual int Initialize(int reset);
 	virtual const int IntecGetSysCardsConfiguration();
+	virtual const int IntecSetDiodeInputs(bool enable, unsigned int mask);
+	virtual const int IntecSetPFInputs(bool enable, unsigned int mask);	
+	virtual const int IntecSetProcHotInputs(bool enable, unsigned int mask);
+
+
 
 public:
 	int m_device_index;
