@@ -5,7 +5,6 @@
 #include <string>
 #include <exception>
 
-
 class ClibIntecException : public std::exception
 {
  std::string _what;
@@ -14,5 +13,3 @@ class ClibIntecException : public std::exception
 	virtual const char* what() const throw() { return _what.c_str(); }
  };
 #endif
-
-

@@ -38,17 +38,14 @@ int ClibIntecOperations::Initialize(int reset)
 
 	if(reset)
 	{
-
 		// update the currentDiodeMask_
 		currentDiodeMask_=0;
 		if(!IntecSetDiodeInputs(true,currentDiodeMask_))
 			return false;
-
 		// update the currentPFMask_
 		currentPFMask_=0;
 		if(!IntecSetPFInputs(true,currentPFMask_))
 			return false;
-
 		// update the currentProcHOTMask_
 		currentProcHOTMask_=0;
 		if(!IntecSetProcHotInputs(true,currentProcHOTMask_))
@@ -229,7 +226,7 @@ const int ClibIntecOperations::IntecClearProcHotEventsCounter(int input_num)
 {
 	//Clear Prochot status fields for a specific channel by setting the appropriate bit of ChResetCounter field in PROCHOT_CFG register.
 
-	ULONG32 resetVal;
+	int resetVal;
 	if(input_num==-1)
 		resetVal=0xf;
 	else
@@ -350,12 +347,10 @@ bool ClibIntecOperations::IsCardExist(int cardId)
 {
 	// check if the IntecD cardId is connected
 	//
-
-	if(cardId<InTECDCards_)
+	if (cardId < InTECDCards_)
 	{
 		return true;
 	}
-
 	return false;
 }
 
@@ -391,8 +386,6 @@ unsigned short ClibIntecOperations::convertRealToIntecTemperature(float RealTemp
 {
 	return (unsigned short)((RealTemperature + 64)*10);
 }
-
-
 
 unsigned int ClibIntecOperations::calculateEventParamVal(std::string paramVal,std::string paramType)
 {
@@ -1204,7 +1197,7 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_TH_POSITION th_position_reg;
 		readSize_=sizeof(UN_D_TH_POSITION);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_THERMAL_HEAD |OFFSET_D_TH_POSITION,(UCHAR *)&th_position_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_THERMAL_HEAD |OFFSET_D_TH_POSITION,(unsigned char *)&th_position_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_TH_POSITION register ");
 			return false;
@@ -1216,7 +1209,6 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 			SetIntecLastError("IntecSetEventParam() :Failed to write OFFSET_D_TH_POSITION register ");
 			return false;
 		}
-
 		// verify
 		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_THERMAL_HEAD |OFFSET_D_TH_POSITION,(UCHAR *)&th_position_reg.value,&readSize_)!=STATUS_OK)
 		{
@@ -2034,8 +2026,70 @@ const int ClibIntecOperations::peciFrequencyTablesInitialization()
 	peciFreq_DigitalToIndex[2500]=34;
 	peciFreq_DigitalToIndex[3334]=35;
 	peciFreq_DigitalToIndex[5000]=36;
-
 	return true;
+}
+
+const int ClibIntecOperations::IntecGetTemperature(int cardId, float *temprature, unsigned int *timestamp)
+{
+	unsigned short intecTemperature;
+	int rc;
+	rc = IntecGetTemperature(cardId,&intecTemperature,timestamp);
+	*temprature=convertIntecToRealTemperature(intecTemperature);
+	return rc;
+}
+
+const int ClibIntecOperations::IntecGetTemperature(int cardId, unsigned short *temprature, unsigned int *timestamp)
+{
+	if (IsCardExist(cardId))
+	{
+		// first that the D_FEEDBACK status  that at least one source is available
+		UN_D_FEEDBACK_STATUS feedback_status;
+		UN_D_FEEDBACK_TEMP  feedback_temperature;
+
+		readSize_=sizeof(UN_D_FEEDBACK_STATUS);
+		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)|OFFSET_UNIT_D_CONTROL|OFFSET_D_FEEDBACK_STATUS,(UCHAR *)&feedback_status.value,&readSize_) != STATUS_OK)
+		{
+//			sprintf_s(msg_buf,MSG_BUF_SIZE,"IntecGetTemperature:Failed to Read  IntecDCard (%d) OFFSET_D_FEEDBACK_STATUS",cardId);
+//			SetIntecLastError(msg_buf);
+			return false;
+		}
+		if(feedback_status.fields.SourceValid==0)
+		{
+//			sprintf_s(msg_buf,MSG_BUF_SIZE,"IntecGetTemperature: No valid source for temperature IntecDCard (%d)",cardId);
+//			SetIntecLastError(msg_buf);
+			return false;
+		}
+
+		readSize_=sizeof(UN_D_FEEDBACK_TEMP);
+		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)|OFFSET_UNIT_D_CONTROL|OFFSET_D_FEEDBACK_TEMP,(UCHAR *)&feedback_temperature.value,&readSize_) != STATUS_OK)
+		{
+//			sprintf_s(msg_buf,MSG_BUF_SIZE,"IntecGetTemperature:Failed to Read  IntecDCard (%d) OFFSET_D_FEEDBACK_TEMP",cardId);
+//			SetIntecLastError(msg_buf);
+			return false;
+		}
+		if(!feedback_temperature.fields.TempValid)
+		{
+//			sprintf_s(msg_buf,MSG_BUF_SIZE,"IntecGetTemperature:feedback_temperature is NOT valid  IntecDCard (%d) ",cardId);
+//			SetIntecLastError(msg_buf);
+			return false;
+		}
+		*temprature=feedback_temperature.fields.Temp;
+		*timestamp=feedback_temperature.fields.TimeStamp;
+
+		return true;
+
+	}
+	else
+	{
+		//sprintf_s(msg_buf,MSG_BUF_SIZE,"IntecGetTemperature() :IntecDCard (%d) Not Exist ",cardId);
+		//SetIntecLastError(msg_buf);
+	}
+	return false;
+}
+
+float ClibIntecOperations::convertIntecToRealTemperature(unsigned short IntecTemperature)
+{
+	return	((float)(IntecTemperature)/10 - 64);
 }
 
 const int ClibIntecOperations::IntecSetAllEventDisableEnable(int cardId, EventType evType)

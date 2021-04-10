@@ -13,7 +13,8 @@
 #include <libusb-1.0/libusb.h>
 #include <cstring>
 
-class ClibIntecDevice {
+class ClibIntecDevice
+{
 public:
 	ClibIntecDevice(){}
 	virtual ~ClibIntecDevice(){}

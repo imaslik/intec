@@ -200,17 +200,21 @@ int libIntec_InitializeCardNoReset(unsigned int index)
 	}
 }
 
-int libIntec_GetTemperature(unsigned int index)
+int libIntec_GetTemperature(unsigned int index, int cardId,float *temprature, unsigned int * timestamp)
 {
 	try
 	{
 		IntecMutex.lock();
+		int status = libIntecServices->m_Operations[index]->IntecGetTemperature(cardId, temprature, timestamp);
 		IntecMutex.unlock();
+		if (status != STATUS_OK)
+			return ERROR_FAIL;
 		return STATUS_OK;
 	}
-	catch (...)
+	catch (std::exception& e)
 	{
 		IntecMutex.unlock();
+		libIntecServices->SetLastError(e.what());
 		return ERROR_FAIL;
 	}
 }

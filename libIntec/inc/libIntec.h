@@ -168,7 +168,7 @@ int libIntec_SetDeviceMode(int index, IntecDeviceOperationMode mode);
 int libIntec_GetDeviceName(int index, char* Buffer);
 int libIntec_InitializeCard(unsigned int index);
 int libIntec_InitializeCardNoReset(unsigned int index);
-int libIntec_GetTemperature(unsigned int index);
+int libIntec_GetTemperature(unsigned int index, int cardId,float *temprature, unsigned int * timestamp);
 int libIntec_SetTemperature(unsigned int index, int cardId, float Temp);
 int libIntex_SetFeedBackControlParameter(unsigned int index, int cardId, IntecTemperatureCalcType calcMode, IntecTemperatureSourceType srcType, int mask);
 int libIntec_SetCaseInput(unsigned int index, int cardId, bool enable, int mask);

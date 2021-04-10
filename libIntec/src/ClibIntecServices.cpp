@@ -22,6 +22,7 @@ ClibIntecDevice* InstantiateIntecDevice(IntecDeviceType DeviceType)
 		return NULL;
 	}
 }
+
 ClibIntecServices* InstantiateIntecServices(IntecUsbDeviceType dev)
 {
 	return new ClibIntecServices(dev);
@@ -36,6 +37,7 @@ ClibIntecOperations* InstantiateIntecOperations(unsigned int index)
 {
 	return new ClibIntecOperations(index);
 }
+
 void DeleteIntecServices(ClibIntecServices* services)
 {
 	delete services;

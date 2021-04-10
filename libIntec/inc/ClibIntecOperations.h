@@ -124,6 +124,7 @@ public:
 	virtual const int IntecLoadandConfigureEvents(int cardId,const char * eventsFileName, bool configureHW );
 	virtual unsigned int calculateEventParamVal(std::string paramVal,std::string paramType);
 	virtual unsigned short convertRealToIntecTemperature(float RealTemperature);
+	virtual float convertIntecToRealTemperature(unsigned short IntecTemperature);
 	virtual const int IntecSetEventParam(int cardId,EventType evType,int eventId,  EventConfigurationParam eventParam);
 	virtual const int IntecGetDiodeInputs(unsigned int *mask);
 	virtual const int IntecGetPFInputs(unsigned int *mask);
@@ -131,9 +132,7 @@ public:
 	virtual const int IntecGetPeciInputs(unsigned int *mask);
 	virtual bool buildIntecBenchSelfTestErrorMessages();
 	virtual bool buildIntecStandaloneSelfTestErrorMessages();
-
 	virtual bool buildIntecBasicFunctionalitySelfTestErrorMessages();
-
 	virtual bool buildIntecDBenchSelfTestErrorMessages();
 	virtual bool buildIntecDStandaloneSelfTestErrorMessages();
 	virtual bool buildIntecDBasicFunctionalitySelfTestErrorMessages();
@@ -141,6 +140,9 @@ public:
 	virtual const int peciFrequencyTablesInitialization();
 
 
+
+	virtual const int IntecGetTemperature(int cardId,float *temprature, unsigned int * timestamp);
+	virtual const int IntecGetTemperature(int cardId,unsigned short *temprature, unsigned int * timestamp);
 
 protected:
 	virtual const int IntecSetAllEventDisableEnable(int cardId,EventType evType);
