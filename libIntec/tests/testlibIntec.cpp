@@ -11,6 +11,7 @@
 
 int test_main(int argc, char ** argvv)
 {
+	char ERROR_MSG[512];
 	std::cout << "libIntec API test" << std::endl;
 
 	unsigned int major, minor;
@@ -42,33 +43,40 @@ int test_main(int argc, char ** argvv)
 		std::cout << "TEST PASS - libtIntec_GetNumOfUsbDevices" << std::endl;
 	}
 
-	for (unsigned int index = 0; index < num_of_devices; index++)
+	for (int index = 0; index < num_of_devices; index++)
 	{
 		if (libIntec_InitializeCard(index) != STATUS_OK)
 		{
 			std::cout << "TEST FAIL: libIntec_InitializeCard return error" << std::endl;
+			libintec_GetLastError(ERROR_MSG, (unsigned int)512);
+			std::cout << "LAST ERROR " << ERROR_MSG << std::endl;
+
+			libIntec_Exit();
+			exit(1);
 		}
 		else
 		{
 			std::cout << "TEST PASS - libIntec_InitializeCard" << std::endl;
 		}
 
-		int CardId = 0;
+		int CardId = 2;
 		float Temperature = 0;
 		unsigned int TimeStamp = 0;
-
-//		if (libIntec_GetTemperature(index, CardId, &Temperature, &TimeStamp) != STATUS_OK)
-//		{
-//			std::cout << "TEST FAIL: libIntec_GetTemperature return error" << std::endl;
-//			libIntec_Exit();
-//			exit(1);
-//		}
-//		else
-//		{
-//			std::cout << "TEST PASS - libIntec_GetTemperature" << std::endl;
-//			std::cout << "ReadTemparture = " << Temperature << std::endl;
-//			std::cout << "Timestamp: " << TimeStamp << std::endl;
-//		}
+		for (int j=0; j< 10; j++)
+		{
+			if (libIntec_GetTemperature(index, CardId, &Temperature, &TimeStamp) != STATUS_OK)
+			{
+				std::cout << "TEST FAIL: libIntec_GetTemperature return error" << std::endl;
+				libIntec_Exit();
+				exit(1);
+			}
+			else
+			{
+				std::cout << "TEST PASS - libIntec_GetTemperature" << std::endl;
+				std::cout << "ReadTemparture = " << Temperature << std::endl;
+				std::cout << "Timestamp: " << TimeStamp << std::endl;
+			}
+		}
 	}
 
 	libIntec_Exit();

@@ -8,7 +8,7 @@
 #define DBG(x)
 #endif
 
-#define ENABLE_TRACE
+//#define ENABLE_TRACE
 #ifdef ENABLE_TRACE
 #define __TRACE  std::cout << "TRACE PRINT: " <<  __func__ << std::endl;
 #else
@@ -193,7 +193,7 @@ int libIntec_GetTemperature(unsigned int index, int cardId,float *temprature, un
 int libIntec_SetTemperature(unsigned int index, int cardId, float Temp);
 int libIntex_SetFeedBackControlParameter(unsigned int index, int cardId, IntecTemperatureCalcType calcMode, IntecTemperatureSourceType srcType, int mask);
 int libIntec_SetCaseInput(unsigned int index, int cardId, bool enable, int mask);
-int libintec_GetLastError();
+int libintec_GetLastError(char *buffer, unsigned int buffersize);
 int libIntec_GetTemperatureSource(unsigned int index, IntecTemperatureSourceType, int *source_size, short* sources, unsigned int *timestamp, int* valid_mask);
 int libIntec_GetActualFeedbackType(unsigned int index, int cardId, IntecTemperatureSourceType* actualSrcType);
 

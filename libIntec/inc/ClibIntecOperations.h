@@ -24,6 +24,8 @@
 
 typedef std::map<int, std::string,std::less<int>> Int2String;
 
+#define EVENTS_FILE_NAME "InTECEventsConfiguration"
+#define TH_EEPROMPAGE_SIZE 8
 
 
 #define MAX_EVENTS 32

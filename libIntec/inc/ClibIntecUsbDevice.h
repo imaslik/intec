@@ -38,10 +38,10 @@ public:
 	virtual int32_t Close();
 	virtual int32_t Connect();
 	virtual int32_t Diconnect();
-	virtual int32_t Write(unsigned char *szBuffer, uint32_t cbSize);
-	virtual int32_t Read(unsigned char *szBuffer, uint32_t cbRead);
-	virtual int32_t Write(uint32_t addr, unsigned char *szBuffer, uint32_t cbSize);
-	virtual int32_t Read(uint32_t addr, unsigned char *szBuffer, uint32_t cbSize);
+	virtual int32_t Write(unsigned char *szBuffer, unsigned int cbSize);
+	virtual int32_t Read(unsigned char *szBuffer, unsigned int cbRead);
+	virtual int32_t Write(unsigned int addr, unsigned char *szBuffer, unsigned int cbSize);
+	virtual int32_t Read(unsigned int addr, unsigned char *szBuffer, unsigned int cbSize);
 	virtual int32_t WriteAndRead(unsigned char * writeBuffer,unsigned int writeSize, unsigned char * readBuffer, unsigned int * readSize);
 	virtual IntecDeviceOperationMode GetDeviceOperationMode(){return UndefinedOpMode;}
 	virtual int GetConfiguration();

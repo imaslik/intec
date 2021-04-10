@@ -32,7 +32,8 @@ void printbuffer(unsigned char* buffer, unsigned int size)
 }
 
 int ClibIntecOperations::Initialize(int reset)
-{__TRACE
+{
+	std::cout << "I am here" << std::endl;
 	m_initialization_flag = false;
 	memset(peci_dts_arr, 0, sizeof(PECI_DTS)*MAX_DTS);
 	memset(peci_pkg_arr, 0, sizeof(PECI_PACKAGE)*MAX_PACKAGES);
@@ -47,66 +48,78 @@ int ClibIntecOperations::Initialize(int reset)
 	}
 
 	TDAUDetected_ = diode_status.fields.TDAUDetected;
+	DBG("before looping throw the cards")
+
+	// update the 	InTECDCards_ , PECIModuleExist_
+	if(!IntecGetSysCardsConfiguration())
+		return ERROR_FAIL;
 
 	if(reset)
 	{
 		// update the currentDiodeMask_
 		currentDiodeMask_=0;
-		if(!IntecSetDiodeInputs(true,currentDiodeMask_))
-			return false;
+		if(!IntecSetDiodeInputs(true, currentDiodeMask_))
+			return ERROR_FAIL;
 		// update the currentPFMask_
 		currentPFMask_=0;
-		if(!IntecSetPFInputs(true,currentPFMask_))
-			return false;
+		if(!IntecSetPFInputs(true, currentPFMask_))
+			return ERROR_FAIL;
 		// update the currentProcHOTMask_
 		currentProcHOTMask_=0;
-		if(!IntecSetProcHotInputs(true,currentProcHOTMask_))
-			return false;
+		if(!IntecSetProcHotInputs(true, currentProcHOTMask_))
+			return ERROR_FAIL;
 
 		// update the currentProcHOTMask_
 		currentPeciMask_=0;
-		if(!IntecSetPeciInputs(true,currentPeciMask_))
-			return false;
+		if(!IntecSetPeciInputs(true, currentPeciMask_))
+			return ERROR_FAIL;
 
 		if(!IntecClearPeciSensorsConfiguration())
-			return false;
+			return ERROR_FAIL;
 
-		return STATUS_OK;
+		DBG("before looping throw the cards" << InTECDCards_)
 		for(int i=0; i < InTECDCards_; i++)
 		{
-			currentCaseMask_[i]=0;
-			if(!IntecSetCaseInputs(i,true,currentCaseMask_[i]))
-				return false;
-			// read the actual mask back from HW since it can be forced by HW - case0 is forced
-			if(!IntecGetCaseInputs(i,&currentCaseMask_[i]))
-				return false;
+			currentCaseMask_[i] = 0;
+			if (!IntecSetCaseInputs(i ,true, currentCaseMask_[i]))
+				return ERROR_FAIL;
 
-			char eventsFileName[256];
+			std::cout << "current mask " << currentCaseMask_[i] << std::endl;
+			// read the actual mask back from HW since it can be forced by HW - case0 is forced
+			if (!IntecGetCaseInputs(i, &currentCaseMask_[i]))
+				return ERROR_FAIL;
+
+
+			std::cout << "current mask " << currentCaseMask_[i] << std::endl;
+
+			//char eventsFileName[256];
 			getcwd(workingDir_, sizeof(workingDir_));
-			//TODO fix this function call snprintf(eventsFileName,256, "%s%s.xml", workingDir_, EVENTS_FILE_NAME);
-			IntecLoadandConfigureEvents(i,eventsFileName,false);
+
+			printf("%s\n", workingDir_);
+			//snprintf(eventsFileName,256, "%s%s.xml", workingDir_, EVENTS_FILE_NAME);
+			//IntecLoadandConfigureEvents(i,eventsFileName,false);
 		}
 	}
 	else
 	{
 		if(!IntecGetDiodeInputs(&currentDiodeMask_))
-			return false;
+			return ERROR_FAIL;
 
 		if(!IntecGetPFInputs(&currentPFMask_))
-			return false;
+			return ERROR_FAIL;
 
 
 		if(!IntecGetProcHotInputs(&currentProcHOTMask_))
-			return false;
+			return ERROR_FAIL;
 
 
 		if(!IntecGetPeciInputs(&currentPeciMask_))
-			return false;
+			return ERROR_FAIL;
 
 		for(int i=0; i < InTECDCards_; i++)
 		{
 			if(!IntecGetCaseInputs(i,&currentCaseMask_[i]))
-				return false;
+				return ERROR_FAIL;
 			char eventsFileName[256];
 			getcwd(workingDir_, sizeof(workingDir_));
 			//GetWorkDir(sizeof(workingDir_), workingDir_);
@@ -116,25 +129,23 @@ int ClibIntecOperations::Initialize(int reset)
 	}
 	// build Intec Tests Error messages vectors
 	if(!buildIntecBenchSelfTestErrorMessages())
-		return false;
+		return ERROR_FAIL;
 	if(!buildIntecStandaloneSelfTestErrorMessages())
-		return false;
+		return ERROR_FAIL;
 	if(!buildIntecBasicFunctionalitySelfTestErrorMessages())
-		return false;
+		return ERROR_FAIL;
 
 	// build IntecD Tests Error messages vectors
 	if(!buildIntecDBenchSelfTestErrorMessages())
-		return false;
+		return ERROR_FAIL;
 	if(!buildIntecDStandaloneSelfTestErrorMessages())
-		return false;
+		return ERROR_FAIL;
 	if(!buildIntecDBasicFunctionalitySelfTestErrorMessages())
-		return false;
-
+		return ERROR_FAIL;
 	if(!buildIntecDWaterModuleBenchTestErrorMessages())
-		return false;
-
+		return ERROR_FAIL;
 	if(!peciFrequencyTablesInitialization())
-		return false;
+		return ERROR_FAIL;
 
 
 	m_initialization_flag = true;
@@ -152,12 +163,12 @@ const int ClibIntecOperations::IntecGetSysCardsConfiguration()
 	readSize_=sizeof(UN_CONNECTED_DEVICES);
 	if(libIntec_ReadDeviceByAddr(deviceIndex_,INTEC_BASE_ADDR|OFFSET_UNIT_GENERAL|OFFSET_CONNECTED_DEVICES,(UCHAR *)&connectedDevices.value,&readSize_)!= STATUS_OK)
 	{
-		//SetIntecLastError("IntecGetSysCardsConfiguration:: Failed to Read OFFSET_CONNECTED_DEVICES");
+		SetIntecLastError("IntecGetSysCardsConfiguration:: Failed to Read OFFSET_CONNECTED_DEVICES");
 		return ERROR_FAIL;
 	}
-	printf("connectedDevices.value=%x\n",connectedDevices.value);
+	//printf("connectedDevices.value=%x\n",connectedDevices.value);
 	if(connectedDevices.fields.PECIModule)
-			PECIModuleExist_=true;
+		PECIModuleExist_= true;
 	if(connectedDevices.fields.InTECD0)
 		InTECDCards_++;
 	if(connectedDevices.fields.InTECD1)
@@ -322,7 +333,6 @@ const int ClibIntecOperations::IntecSetCaseInputs(int cardId,bool enable, unsign
 {
 	if (IsCardExist(cardId))
 	{
-
 		if(enable)
 			currentCaseMask_[cardId] |=mask;
 		else
@@ -2045,8 +2055,8 @@ const int ClibIntecOperations::IntecGetTemperature(int cardId, float *temprature
 {
 	unsigned short intecTemperature;
 	int rc;
-	rc = IntecGetTemperature(cardId,&intecTemperature,timestamp);
-	*temprature=convertIntecToRealTemperature(intecTemperature);
+	rc = IntecGetTemperature(cardId, &intecTemperature, timestamp);
+	*temprature = convertIntecToRealTemperature(intecTemperature);
 	return rc;
 }
 
@@ -2062,13 +2072,13 @@ const int ClibIntecOperations::IntecGetTemperature(int cardId, unsigned short *t
 		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)|OFFSET_UNIT_D_CONTROL|OFFSET_D_FEEDBACK_STATUS,(UCHAR *)&feedback_status.value,&readSize_) != STATUS_OK)
 		{
 //			sprintf_s(msg_buf,MSG_BUF_SIZE,"IntecGetTemperature:Failed to Read  IntecDCard (%d) OFFSET_D_FEEDBACK_STATUS",cardId);
-//			SetIntecLastError(msg_buf);
+			SetIntecLastError(msg_buf);
 			return false;
 		}
 		if(feedback_status.fields.SourceValid==0)
 		{
 //			sprintf_s(msg_buf,MSG_BUF_SIZE,"IntecGetTemperature: No valid source for temperature IntecDCard (%d)",cardId);
-//			SetIntecLastError(msg_buf);
+			SetIntecLastError(msg_buf);
 			return false;
 		}
 
@@ -2076,20 +2086,19 @@ const int ClibIntecOperations::IntecGetTemperature(int cardId, unsigned short *t
 		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)|OFFSET_UNIT_D_CONTROL|OFFSET_D_FEEDBACK_TEMP,(UCHAR *)&feedback_temperature.value,&readSize_) != STATUS_OK)
 		{
 //			sprintf_s(msg_buf,MSG_BUF_SIZE,"IntecGetTemperature:Failed to Read  IntecDCard (%d) OFFSET_D_FEEDBACK_TEMP",cardId);
-//			SetIntecLastError(msg_buf);
+			SetIntecLastError(msg_buf);
 			return false;
 		}
 		if(!feedback_temperature.fields.TempValid)
 		{
 //			sprintf_s(msg_buf,MSG_BUF_SIZE,"IntecGetTemperature:feedback_temperature is NOT valid  IntecDCard (%d) ",cardId);
-//			SetIntecLastError(msg_buf);
+			SetIntecLastError(msg_buf);
 			return false;
 		}
-		*temprature=feedback_temperature.fields.Temp;
-		*timestamp=feedback_temperature.fields.TimeStamp;
 
+		*temprature = feedback_temperature.fields.Temp;
+		*timestamp = feedback_temperature.fields.TimeStamp;
 		return true;
-
 	}
 	else
 	{

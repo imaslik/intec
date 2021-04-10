@@ -23,10 +23,10 @@ public:
 	virtual int32_t Close()=0;
 	virtual int32_t Connect()=0;
 	virtual int32_t Diconnect()=0;
-	virtual int32_t Write(unsigned char *szBuffer, uint32_t cbSize)=0;
-	virtual int32_t Read(unsigned char *szBuffer, uint32_t cbRead)=0;
-	virtual int32_t Write(unsigned int addr, unsigned char *szBuffer, uint32_t cbSize)=0;
-	virtual int32_t Read(unsigned int addr, unsigned char *szBuffer, uint32_t cbSize)=0;
+	virtual int32_t Write(unsigned char *szBuffer, unsigned int cbSize)=0;
+	virtual int32_t Read(unsigned char *szBuffer, unsigned int cbRead)=0;
+	virtual int32_t Write(unsigned int addr, unsigned char *szBuffer, unsigned int cbSize)=0;
+	virtual int32_t Read(unsigned int addr, unsigned char *szBuffer, unsigned int cbSize)=0;
 	virtual int32_t WriteAndRead(unsigned char * writeBuffer,unsigned int writeSize, unsigned char * readBuffer, unsigned int * readSize)=0;
 	virtual IntecDeviceOperationMode GetDeviceMode()=0;
 	virtual int32_t SetDeviceMode(IntecDeviceOperationMode)=0;

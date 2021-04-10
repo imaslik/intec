@@ -24,7 +24,7 @@ void SetIntecLastError(const char * err)
 }
 
 int libIntec_Initialize(IntecUsbDeviceType dev)
-{__TRACE
+{
 	try
 	{
 		IntecMutex.lock();
@@ -72,7 +72,7 @@ int libIntec_InitializeOverNetwork(IntecUsbDeviceType dev, uint32_t numOfDevices
 }
 
 int libIntec_Exit(void)
-{__TRACE
+{
 	IntecMutex.lock();
 	libIntecServices->Exit();
 	DeleteIntecServices(libIntecServices);
@@ -98,7 +98,7 @@ int libtIntec_GetNumOfUsbDevices(int& number_devices_found)
 }
 
 int libIntec_ReadDeviceByAddr(unsigned int index, unsigned int addr, unsigned char *szBuffer, unsigned int *cbRead)
-{__TRACE
+{
 	int res;
 	res = libIntecServices->m_Devices[index]->Read(addr, szBuffer, *cbRead);
 	if (res != STATUS_OK)
@@ -174,11 +174,12 @@ int libIntec_GetDeviceName(int index, char* Buffer)
 }
 
 int libIntec_InitializeCard(unsigned int index)
-{__TRACE
+{
 	try
 	{
 		IntecMutex.lock();
-		libIntecServices->m_Operations[index]->Initialize(1);
+		if (libIntecServices->m_Operations[index]->Initialize(1) != STATUS_OK)
+			throw ClibIntecException("could not initialize card");
 		IntecMutex.unlock();
 		return STATUS_OK;
 	}

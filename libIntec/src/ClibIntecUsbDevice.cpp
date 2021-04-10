@@ -48,7 +48,7 @@ int32_t ClibIntecUsbDevice::Close()
 }
 
 int32_t ClibIntecUsbDevice::Connect()
-{__TRACE
+{
 	if (m_usb_device_handle == NULL)
 		throw ClibIntecException("could not connect usb handle not preset");
 
@@ -71,7 +71,7 @@ int32_t ClibIntecUsbDevice::Connect()
 }
 
 int32_t ClibIntecUsbDevice::Diconnect()
-{__TRACE
+{
 	if (m_device_connect_flag == true)
 	{
 		if (m_usb_device_handle != NULL)
@@ -89,7 +89,7 @@ int32_t ClibIntecUsbDevice::Diconnect()
 	return STATUS_OK;
 }
 
-int32_t ClibIntecUsbDevice::Write(unsigned char *szBuffer, uint32_t cbWrite)
+int32_t ClibIntecUsbDevice::Write(unsigned char *szBuffer, unsigned int cbWrite)
 {
 	if (m_usb_device_handle == NULL)
 	{
@@ -105,8 +105,8 @@ int32_t ClibIntecUsbDevice::Write(unsigned char *szBuffer, uint32_t cbWrite)
 	return STATUS_OK;
 }
 
-int32_t ClibIntecUsbDevice::Read(unsigned char *szBuffer, uint32_t cbRead)
-{__TRACE
+int32_t ClibIntecUsbDevice::Read(unsigned char *szBuffer, unsigned int cbRead)
+{
 	if (m_usb_device_handle == NULL)
 	{
 		return ERROR_FAIL;
@@ -121,7 +121,7 @@ int32_t ClibIntecUsbDevice::Read(unsigned char *szBuffer, uint32_t cbRead)
 	return STATUS_OK;
 }
 
-int32_t ClibIntecUsbDevice::Write(uint32_t addr, unsigned char *szBuffer, uint32_t cbSize)
+int32_t ClibIntecUsbDevice::Write(unsigned int addr, unsigned char *szBuffer, unsigned int cbSize)
 {
 	//Host to device write command
 	//Cmd Type	          Register Address 				   DataLen	 			Data
@@ -152,8 +152,8 @@ int32_t ClibIntecUsbDevice::Write(uint32_t addr, unsigned char *szBuffer, uint32
 	return STATUS_OK;
 }
 
-int32_t ClibIntecUsbDevice::Read(uint32_t addr, unsigned char *szBuffer, uint32_t cbSize)
-{__TRACE
+int32_t ClibIntecUsbDevice::Read(unsigned int addr, unsigned char *szBuffer, unsigned int cbSize)
+{
 	unsigned int actualTReadSize = cbSize;
 	unsigned char sendBuffer[PKT_HEADER_LENGTH];
 	sendBuffer[0] = USB_READ_WORD_COMMAND;
@@ -170,7 +170,7 @@ int32_t ClibIntecUsbDevice::Read(uint32_t addr, unsigned char *szBuffer, uint32_
 }
 
 int32_t ClibIntecUsbDevice::WriteAndRead(unsigned char *writeBuffer,unsigned int writeSize, unsigned char *readBuffer, unsigned int * readSize)
-{__TRACE
+{
 	unsigned int reqToRead = *readSize;
 	int rc;
 
