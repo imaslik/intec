@@ -14,7 +14,13 @@
 #include <string.h>
 #include "libIntec_DwDefs.h"
 #include "libIntec_InTEC_DwDefs.h"
+#include "libIntec_PECIModule_DwDefs.h"
+#include "libIntec_InTEC_D_DwDefs.h"
+#include <unistd.h>
+#include <memory>
 #include <map>
+#include <cstdlib>
+#include "ClibIntecXml.h"
 
 typedef std::map<int, std::string,std::less<int>> Int2String;
 
@@ -109,8 +115,35 @@ public:
 	virtual const int IntecSetDiodeInputs(bool enable, unsigned int mask);
 	virtual const int IntecSetPFInputs(bool enable, unsigned int mask);	
 	virtual const int IntecSetProcHotInputs(bool enable, unsigned int mask);
+	virtual const int IntecClearProcHotEventsCounter(int input_num);
+	virtual const int IntecSetPeciInputs(bool enable, unsigned int mask);
+	virtual const int IntecClearPeciSensorsConfiguration();
+	virtual const int IntecSetCaseInputs(int cardId,bool enable, unsigned int mask);
+	virtual bool IsCardExist(int cardId);
+	virtual const int IntecGetCaseInputs(int cardId,unsigned int *mask);
+	virtual const int IntecLoadandConfigureEvents(int cardId,const char * eventsFileName, bool configureHW );
+	virtual unsigned int calculateEventParamVal(std::string paramVal,std::string paramType);
+	virtual unsigned short convertRealToIntecTemperature(float RealTemperature);
+	virtual const int IntecSetEventParam(int cardId,EventType evType,int eventId,  EventConfigurationParam eventParam);
+	virtual const int IntecGetDiodeInputs(unsigned int *mask);
+	virtual const int IntecGetPFInputs(unsigned int *mask);
+	virtual const int IntecGetProcHotInputs(unsigned int *mask);
+	virtual const int IntecGetPeciInputs(unsigned int *mask);
+	virtual bool buildIntecBenchSelfTestErrorMessages();
+	virtual bool buildIntecStandaloneSelfTestErrorMessages();
+
+	virtual bool buildIntecBasicFunctionalitySelfTestErrorMessages();
+
+	virtual bool buildIntecDBenchSelfTestErrorMessages();
+	virtual bool buildIntecDStandaloneSelfTestErrorMessages();
+	virtual bool buildIntecDBasicFunctionalitySelfTestErrorMessages();
+	virtual bool buildIntecDWaterModuleBenchTestErrorMessages();
+	virtual const int peciFrequencyTablesInitialization();
 
 
+
+protected:
+	virtual const int IntecSetAllEventDisableEnable(int cardId,EventType evType);
 
 public:
 	int m_device_index;

@@ -400,11 +400,11 @@ typedef union {
 // Register: P_PECI_CFG		Offset: OFFSET_P_PECI_CFG
 // Description: 	Holds the PECI configuration.
 typedef union {
-	LONG32 value;
-		struct {
-			ULONG32	PollDts             	:16; 	//Bitewise, set the bit to enable the appropriate DTS input readout. (Tcase0 is enabled by default)
-			ULONG32	RESERVED0           	:16;
-		} fields;
+	int value;
+	struct {
+		unsigned int PollDts :16; 	//Bitewise, set the bit to enable the appropriate DTS input readout. (Tcase0 is enabled by default)
+		unsigned RESERVED0   :16;
+	} fields;
 } UN_P_PECI_CFG;
 
 // Register: P_PECI_GEN_PARAMS		Offset: OFFSET_P_PECI_GEN_PARAMS

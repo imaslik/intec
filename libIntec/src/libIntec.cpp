@@ -101,13 +101,13 @@ int libIntec_ReadDeviceByAddr(unsigned int index, unsigned int addr, unsigned ch
 	}
 }
 
-int libIntec_WriteDeviceByAddr(unsigned int index, unsigned int addr, unsigned char *szBuffer, unsigned int *cbRead)
+int libIntec_WriteDeviceByAddr(unsigned int index, unsigned int addr, unsigned char *szBuffer, unsigned int cbRead)
 {
 	int res;
 	try
 	{
 		IntecMutex.lock();
-		res = libIntecServices->m_Devices[index]->Write(addr, szBuffer, *cbRead);
+		res = libIntecServices->m_Devices[index]->Write(addr, szBuffer, cbRead);
 		IntecMutex.unlock();
 		if (res != STATUS_OK)
 			return (int)res;

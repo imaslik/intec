@@ -188,15 +188,15 @@
 #define INTEC_FW_VERSION    	0x00000050
 
 typedef union {
-	ULONG32 value;
+	unsigned int value;
 		struct {
-			ULONG32	DetectedDiodes      	:4; 	//bitwise for indication of which thermal diode detected (set if ok)
-			ULONG32	TDAUDetected        	:1; 	//set if TDAU detected,else implies working in FastCal mode
-			ULONG32	RESERVED0           	:2;
-			ULONG32	ModuleOk            	:1; 	//set if Tjunction module is ok, if cleared there is an error in one of the Tjunction modules
-			ULONG32	FastCalFinished     	:4; 	//Bitwise, FastCal calibration finished successfully.
+		unsigned int	DetectedDiodes      	:4; 	//bitwise for indication of which thermal diode detected (set if ok)
+		unsigned int	TDAUDetected        	:1; 	//set if TDAU detected,else implies working in FastCal mode
+		unsigned int	RESERVED0           	:2;
+		unsigned int	ModuleOk            	:1; 	//set if Tjunction module is ok, if cleared there is an error in one of the Tjunction modules
+		unsigned int	FastCalFinished     	:4; 	//Bitwise, FastCal calibration finished successfully.
 						                            //The appropriate bit is cleared when FastCalGo command received, set after successful calibration and cleared after reading this register
-			ULONG32	RESERVED1           	:20;
+		unsigned int	RESERVED1           	:20;
 		} fields;
 } UN_DIODE_STATUS;
 
