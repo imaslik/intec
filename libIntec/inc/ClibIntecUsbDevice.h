@@ -41,7 +41,7 @@ public:
 	virtual int32_t Write(unsigned char *szBuffer, uint32_t cbSize);
 	virtual int32_t Read(unsigned char *szBuffer, uint32_t cbRead);
 	virtual int32_t Write(uint32_t addr, unsigned char *szBuffer, uint32_t cbSize);
-	virtual int32_t Read(uint32_t addr, unsigned char *szBuffer, uint32_t *cbSize);
+	virtual int32_t Read(uint32_t addr, unsigned char *szBuffer, uint32_t cbSize);
 	virtual int32_t WriteAndRead(unsigned char * writeBuffer,unsigned int writeSize, unsigned char * readBuffer, unsigned int * readSize);
 	virtual IntecDeviceOperationMode GetDeviceOperationMode(){return UndefinedOpMode;}
 	virtual int GetConfiguration();
@@ -57,7 +57,7 @@ public:
 	libusb_device_handle* m_usb_device_handle = NULL;
 	uint16_t m_vid;
 	uint16_t m_pid;
-	int m_interface_nubmer=0;
+	int m_interface_nubmer;
 	libusb_speed m_usb_speed;
 	uint8_t m_usb_bus_number;
 	uint8_t m_usb_port_number;
@@ -104,14 +104,14 @@ protected:
 	IntecUsbDeviceType m_DeviceType;
 	unsigned long m_DeviceIndex;
 	IntecDeviceDriverType m_DriverType;
-	static const unsigned char USB_WRITE_WORD_COMMAND = 0x02;
-	static const unsigned char USB_READ_WORD_COMMAND = 0x01;
-	static const int DEFAULT_TX_TIMEOUT_MS = 2000;
-	static const int DEFAULT_RX_TIMEOUT_MS = 2000;
-	static const int MAX_WRITE_PKT_SIZE = 63;
-	static const int  MAX_READ_PKT_SIZE = 64;
-	static const short PKT_HEADER_LENGTH = 6;
-	static const short REG_WIDTH = 4;
+	const unsigned char USB_WRITE_WORD_COMMAND = 0x02;
+	const unsigned char USB_READ_WORD_COMMAND = 0x01;
+	const int DEFAULT_TX_TIMEOUT_MS = 2000;
+	const int DEFAULT_RX_TIMEOUT_MS = 2000;
+	const int MAX_WRITE_PKT_SIZE = 63;
+	const int  MAX_READ_PKT_SIZE = 64;
+	const short PKT_HEADER_LENGTH = 6;
+	const short REG_WIDTH = 4;
 };
 
 #endif /* SRC_CLIBINTECUSBDEVICE_H_ */

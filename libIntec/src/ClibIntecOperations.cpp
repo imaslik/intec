@@ -17,11 +17,23 @@ ClibIntecOperations::~ClibIntecOperations()
 {
 }
 
-int ClibIntecOperations::Initialize(int reset)
+void printbuffer(unsigned char* buffer, unsigned int size)
 {
-	DBG("ClibIntecOperations::Initialize")
-	m_initialization_flag = false;
+	std::cout << "buffer size = " << size << std::endl;
+	for (unsigned int i=0; i < size; i++)
+	{
+		std::cout << std::hex << (unsigned int) buffer[i];
+		if (i % 80 == 0 && i != 0)
+		{
+			std::cout << std::endl;
+		}
+	}
+	std::cout << std::endl;
+}
 
+int ClibIntecOperations::Initialize(int reset)
+{__TRACE
+	m_initialization_flag = false;
 	memset(peci_dts_arr, 0, sizeof(PECI_DTS)*MAX_DTS);
 	memset(peci_pkg_arr, 0, sizeof(PECI_PACKAGE)*MAX_PACKAGES);
 
@@ -29,7 +41,7 @@ int ClibIntecOperations::Initialize(int reset)
 
 	m_readSize = sizeof(UN_DIODE_STATUS);
 
-	if(libIntec_ReadDeviceByAddr(m_device_index, INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_DIODE_STATUS,(unsigned char *)&diode_status.value,&m_readSize) != STATUS_OK)
+	if(libIntec_ReadDeviceByAddr(m_device_index, INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_DIODE_STATUS, (unsigned char *)&diode_status.value, m_readSize) != STATUS_OK)
 	{
 		return ERROR_FAIL;
 	}
@@ -59,6 +71,7 @@ int ClibIntecOperations::Initialize(int reset)
 		if(!IntecClearPeciSensorsConfiguration())
 			return false;
 
+		return STATUS_OK;
 		for(int i=0; i < InTECDCards_; i++)
 		{
 			currentCaseMask_[i]=0;
@@ -290,7 +303,6 @@ const int ClibIntecOperations::IntecClearPeciSensorsConfiguration()
 				SetIntecLastError("IntecClearPeciSensorsConfiguration:: Failed to Write  OFFSET_P_CFG_DTS0 +channel");
 				return false;
 			}
-
 		}
 		usleep(50);
 		UN_P_CFG_DTS_UPDATE dts_update_reg;

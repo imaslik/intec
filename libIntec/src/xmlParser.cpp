@@ -2059,11 +2059,11 @@ XMLSTR XMLNode::createXMLString(int nFormat, int *pnSize) const
 
 int XMLNode::detachFromParent(XMLNodeData *d)
 {
-    XMLNode *pa=d->pParent->pChild;
-    int i=0;
+    XMLNode *pa = d->pParent->pChild;
+    int i = 0;
     while (((void*)(pa[i].d))!=((void*)d)) i++;
     d->pParent->nChild--;
-    if (d->pParent->nChild) memmove(pa+i,pa+i+1,(d->pParent->nChild-i)*sizeof(XMLNode));
+    if (d->pParent->nChild) memmove(pa+i,pa+i+1, (d->pParent->nChild-i) * sizeof(XMLNode));
     else { free(pa); d->pParent->pChild=NULL; }
     return removeOrderElement(d->pParent,eNodeChild,i);
 }
@@ -2841,4 +2841,3 @@ unsigned char *XMLParserBase64Tool::decode(XMLCSTR data, int *outlen, XMLError *
     if(!decode(data,(unsigned char*)buf,len,xe)){ return NULL; }
     return (unsigned char*)buf;
 }
-

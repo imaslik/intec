@@ -50,6 +50,7 @@ ClibIntecServices::ClibIntecServices(IntecUsbDeviceType DevType_arg)
 	for (int i=0; i < MAX_USB_DEVICES; i++)
 	{
 		m_Devices[i] = NULL;
+		m_Operations[i] = NULL;
 	}
 }
 
@@ -60,6 +61,7 @@ ClibIntecServices::ClibIntecServices(IntecUsbDeviceType DevType_arg, uint32_t nu
 	for (int i=0; i < MAX_USB_DEVICES; i++)
 	{
 		m_Devices[i] = NULL;
+		//m_Operations[i] = NULL;
 	}
 }
 
@@ -75,7 +77,7 @@ ClibIntecServices::~ClibIntecServices()
 }
 
 void ClibIntecServices::Initialize()
-{
+{__TRACE
 	InitializeLibusb();
 	InitializeUsbDevices();
 }
@@ -95,34 +97,36 @@ uint32_t ClibIntecServices::GetUsbDevicesCount()
 	return m_DevCount;
 }
 
-void ClibIntecServices::SetLastError(const char* err)
-{
-	if(!m_LastErrorMsg.empty())
-	{
-		m_LastErrorMsg.insert(0,"->");
-	}
-	m_LastErrorMsg.insert(0,err);
-}
-
-void ClibIntecServices::GetLastError(char* buffer, unsigned int buffersize)
-{
-	std::memset(buffer,0,buffersize);
-	// check boundries & copy
-	if(m_LastErrorMsg.size() < buffersize)
-		std::memcpy(buffer,m_LastErrorMsg.c_str(),m_LastErrorMsg.size());
-	else
-		std::memcpy(buffer,m_LastErrorMsg.c_str(),buffersize-1);
-	m_LastErrorMsg.clear();
-}
-
 const int32_t ClibIntecServices::InitializeLibusb()
-{
-	//initializing libusb
+{__TRACE
 	if(libusb_init(&m_libusb_ctx) != 0)
 	{
 		throw ClibIntecException("libusb returned error: initialization failed");
 	}
 	return STATUS_OK;
+}
+
+void ClibIntecServices::GetVidPidBytype(IntecUsbDeviceType dev, uint16_t &VID, uint16_t &PID)
+{
+	switch (m_DevType)
+	{
+		case IntecH:
+			VID = 0x4d8;
+			PID = 0x53;
+			break;
+		case IntecD:
+			VID = 0x4d8;
+			PID = 0x54;
+			break;
+		case TAU:
+			VID = 0x4d8;
+			PID = 0xfce7;
+			break;
+		default:
+			VID = 0x4d8;
+			PID = 0x53;
+			break;
+	}
 }
 
 const int32_t ClibIntecServices::ExitLibusb(void)
@@ -141,8 +145,7 @@ ClibIntecDevice *ClibIntecServices::operator[](uint32_t i)
 }
 
 const int32_t ClibIntecServices::InitializeUsbDevices()
-{
-	//get usb devices list
+{__TRACE
 	m_libusb_devc = libusb_get_device_list(m_libusb_ctx, &m_libusb_devv);
 	if (m_libusb_devc < 0)
 	{
@@ -151,11 +154,10 @@ const int32_t ClibIntecServices::InitializeUsbDevices()
 
 	//TODO implement a method that searches for devices in "bootLoader mode PID=0x3c VID=0x4d8
 
-	//looking for regular usb devices
-	std::pair<uint16_t, uint16_t> VidPid = m_DevTypeToVidPid[m_DevType];
-	uint16_t VID = VidPid.first;
-	uint16_t PID = VidPid.second;
-	int current_index;
+	uint16_t VID, PID;
+	GetVidPidBytype(m_DevType, VID, PID);
+
+	// iterating over all usb devices on the machine
 	for (int index = 0; index < m_libusb_devc; index++)
 	{
 		libusb_device *device = m_libusb_devv[index];
@@ -167,6 +169,7 @@ const int32_t ClibIntecServices::InitializeUsbDevices()
 		{
 			if (m_DevCount <= MAX_USB_DEVICES)
 			{
+				int current_index;
 				current_index = m_DevCount;
 				m_Devices[current_index] = InstantiateIntecDevice(Usb);
 				m_DevCount++;
@@ -184,7 +187,6 @@ const int32_t ClibIntecServices::InitializeUsbDevices()
 
 				if (m_Devices[current_index]->Connect() != STATUS_OK)
 					throw ClibIntecException("Failed to connect to usb device");
-
 			}
 		}
 	}

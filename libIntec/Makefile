@@ -1,5 +1,5 @@
 CC=g++
-FLAGS=-Wall
+FLAGS=-Wall -g
 LDLIBUSB=$(shell pkg-config --libs --cflags libusb-1.0)
 
 SRC=src
@@ -11,12 +11,13 @@ SRCS=$(wildcard $(SRC)/*.cpp)
 HDRS=$(wildcard $(INC)/*.h)
 ADD_HDRS=$(INC)/libIntec_InTEC_DeDefs.h $(INC)/
 BINS=$(patsubst $(SRC)/%.cpp, $(BIN)/%.o, $(SRCS))
+EXCLUDE=
 
 TARGET= $(LIB)/libIntec.so
 
 all: $(TARGET)
 
-$(TARGET): $(BINS)
+$(TARGET): $(filter-out $(EXCLUDE),$(BINS))
 	$(CC) -fPIC $(FLAGS) $(LDLIBUSB) -shared $^ -o $@
 	cp $(INC)/libIntec.h $(LIB)/libIntec.h 
 

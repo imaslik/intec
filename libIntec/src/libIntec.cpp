@@ -12,28 +12,43 @@
 
 std::mutex IntecMutex;
 ClibIntecServices *libIntecServices = NULL;
+std::string libIntecLastErrorMsg;
 
 void SetIntecLastError(const char * err)
 {
-	libIntecServices->SetLastError(err);
+	if(!libIntecLastErrorMsg.empty())
+	{
+		libIntecLastErrorMsg.insert(0,"->");
+	}
+	libIntecLastErrorMsg.insert(0,err);
 }
 
 int libIntec_Initialize(IntecUsbDeviceType dev)
-{
+{__TRACE
 	try
 	{
 		IntecMutex.lock();
 		libIntecServices = InstantiateIntecServices(dev);
-		libIntecServices->Initialize();
+		if (libIntecServices != NULL)
+			libIntecServices->Initialize();
+		else
+			throw ClibIntecException("could not initializde ClibIntecServices");
 		IntecMutex.unlock();
 		return STATUS_OK;
 	}
 	catch (std::exception& e)
 	{
 		IntecMutex.unlock();
-		libIntecServices->SetLastError(e.what());
+		SetIntecLastError(e.what());
 		return ERROR_FAIL;
 	}
+}
+
+int libIntec_GetlibVersion(unsigned int &major, unsigned int &minor)
+{
+	major = LIBINTEC_VERSION_MAJOR;
+	minor = LIBINTEC_VERSION_MINOR;
+	return STATUS_OK;
 }
 
 int libIntec_InitializeOverNetwork(IntecUsbDeviceType dev, uint32_t numOfDevices, char **HostName)
@@ -51,13 +66,13 @@ int libIntec_InitializeOverNetwork(IntecUsbDeviceType dev, uint32_t numOfDevices
 	catch (std::exception& e)
 	{
 		IntecMutex.unlock();
-		libIntecServices->SetLastError(e.what());
+		SetIntecLastError(e.what());
 		return ERROR_FAIL;
 	}
 }
 
 int libIntec_Exit(void)
-{
+{__TRACE
 	IntecMutex.lock();
 	libIntecServices->Exit();
 	DeleteIntecServices(libIntecServices);
@@ -77,47 +92,38 @@ int libtIntec_GetNumOfUsbDevices(int& number_devices_found)
 	catch (std::exception& e)
 	{
 		IntecMutex.unlock();
-		libIntecServices->SetLastError(e.what());
+		SetIntecLastError(e.what());
 		return ERROR_FAIL;
 	}
 }
 
 int libIntec_ReadDeviceByAddr(unsigned int index, unsigned int addr, unsigned char *szBuffer, unsigned int *cbRead)
+{__TRACE
+	int res;
+	res = libIntecServices->m_Devices[index]->Read(addr, szBuffer, *cbRead);
+	if (res != STATUS_OK)
+		return (int)res;
+	return STATUS_OK;
+}
+
+int libIntec_ReadDeviceByAddr(unsigned int index, unsigned int addr, unsigned char *szBuffer, unsigned int cbRead)
 {
 	int res;
-	try
-	{
-		IntecMutex.lock();
-		res = libIntecServices->m_Devices[index]->Read(addr, szBuffer, cbRead);
-		IntecMutex.unlock();
-		if (res != STATUS_OK)
-			return (int)res;
-		return STATUS_OK;
-	}
-	catch (...)
-	{
-		IntecMutex.unlock();
-		return ERROR_FAIL;
-	}
+	res = libIntecServices->m_Devices[index]->Read(addr, szBuffer, cbRead);
+	IntecMutex.unlock();
+	if (res != STATUS_OK)
+		return (int)res;
+	return STATUS_OK;
 }
 
 int libIntec_WriteDeviceByAddr(unsigned int index, unsigned int addr, unsigned char *szBuffer, unsigned int cbRead)
 {
 	int res;
-	try
-	{
-		IntecMutex.lock();
-		res = libIntecServices->m_Devices[index]->Write(addr, szBuffer, cbRead);
-		IntecMutex.unlock();
-		if (res != STATUS_OK)
-			return (int)res;
-		return STATUS_OK;
-	}
-	catch (...)
-	{
-		IntecMutex.unlock();
-		return ERROR_FAIL;
-	}
+	res = libIntecServices->m_Devices[index]->Write(addr, szBuffer, cbRead);
+	IntecMutex.unlock();
+	if (res != STATUS_OK)
+		return (int)res;
+	return STATUS_OK;
 }
 
 int libIntec_GetDeviceMode(int index, IntecDeviceOperationMode &mode)
@@ -168,7 +174,7 @@ int libIntec_GetDeviceName(int index, char* Buffer)
 }
 
 int libIntec_InitializeCard(unsigned int index)
-{
+{__TRACE
 	try
 	{
 		IntecMutex.lock();
@@ -179,7 +185,7 @@ int libIntec_InitializeCard(unsigned int index)
 	catch (std::exception& e)
 	{
 		IntecMutex.unlock();
-		libIntecServices->SetLastError(e.what());
+		SetIntecLastError(e.what());
 		return ERROR_FAIL;
 	}
 }
@@ -195,7 +201,7 @@ int libIntec_InitializeCardNoReset(unsigned int index)
 	catch (std::exception& e)
 	{
 		IntecMutex.unlock();
-		libIntecServices->SetLastError(e.what());
+		SetIntecLastError(e.what());
 		return ERROR_FAIL;
 	}
 }
@@ -214,7 +220,7 @@ int libIntec_GetTemperature(unsigned int index, int cardId,float *temprature, un
 	catch (std::exception& e)
 	{
 		IntecMutex.unlock();
-		libIntecServices->SetLastError(e.what());
+		SetIntecLastError(e.what());
 		return ERROR_FAIL;
 	}
 }
@@ -260,24 +266,30 @@ int libIntec_SetCaseInput(unsigned int index, int cardId, bool enable, int mask)
 	catch (std::exception& e)
 	{
 		IntecMutex.unlock();
-		libIntecServices->SetLastError(e.what());
+		SetIntecLastError(e.what());
 		return ERROR_FAIL;
 	}
 }
 
-int libintec_GetLastError(char *buff, unsigned int bufsize)
+int libintec_GetLastError(char *buffer, unsigned int buffersize)
 {
 	try
 	{
 		IntecMutex.lock();
-		libIntecServices->GetLastError(buff, bufsize);
+		std::memset(buffer, 0, buffersize);
+		// check boundries & copy
+		if(libIntecLastErrorMsg.size() < buffersize)
+			std::memcpy(buffer,libIntecLastErrorMsg.c_str(),libIntecLastErrorMsg.size());
+		else
+			std::memcpy(buffer,libIntecLastErrorMsg.c_str(),buffersize-1);
+		libIntecLastErrorMsg.clear();
 		IntecMutex.unlock();
 		return STATUS_OK;
 	}
 	catch (std::exception& e)
 	{
 		IntecMutex.unlock();
-		libIntecServices->SetLastError(e.what());
+		SetIntecLastError(e.what());
 		return ERROR_FAIL;
 	}
 }
@@ -293,7 +305,7 @@ int libIntec_GetTemperatureSource(unsigned int index, IntecTemperatureSourceType
 	catch (std::exception& e)
 	{
 		IntecMutex.unlock();
-		libIntecServices->SetLastError(e.what());
+		SetIntecLastError(e.what());
 		return ERROR_FAIL;
 	}
 }
@@ -309,7 +321,7 @@ int libIntec_GetActualFeedbackType(unsigned int index, int cardId, IntecTemperat
 	catch (std::exception& e)
 	{
 		IntecMutex.unlock();
-		libIntecServices->SetLastError(e.what());
+		SetIntecLastError(e.what());
 		return ERROR_FAIL;
 	}
 }

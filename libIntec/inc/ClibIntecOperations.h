@@ -152,8 +152,6 @@ public:
 	bool m_initialization_flag;
 
 private:
-
-
 	unsigned int m_readSize;
 
 	bool Initialized_;
@@ -181,7 +179,7 @@ private:
 	PECI_DTS peci_dts_arr[MAX_DTS];
 	PECI_PACKAGE peci_pkg_arr[MAX_PACKAGES];
 	//TODO look into why the compiler doesn't accept this line
-	//UN_P_PECI_GEN_PARAMS peci_general_params;
+	UN_P_PECI_GEN_PARAMS peci_general_params;
 
 	SAFETY_EVENT failure_events[MAX_EVENTS];
 	SAFETY_EVENT warning_events[MAX_EVENTS];

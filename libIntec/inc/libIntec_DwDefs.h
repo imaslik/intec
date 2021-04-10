@@ -189,15 +189,15 @@
 
 typedef union {
 	unsigned int value;
-		struct {
+	struct {
 		unsigned int	DetectedDiodes      	:4; 	//bitwise for indication of which thermal diode detected (set if ok)
 		unsigned int	TDAUDetected        	:1; 	//set if TDAU detected,else implies working in FastCal mode
 		unsigned int	RESERVED0           	:2;
 		unsigned int	ModuleOk            	:1; 	//set if Tjunction module is ok, if cleared there is an error in one of the Tjunction modules
 		unsigned int	FastCalFinished     	:4; 	//Bitwise, FastCal calibration finished successfully.
-						                            //The appropriate bit is cleared when FastCalGo command received, set after successful calibration and cleared after reading this register
+													//The appropriate bit is cleared when FastCalGo command received, set after successful calibration and cleared after reading this register
 		unsigned int	RESERVED1           	:20;
-		} fields;
+	} fields;
 } UN_DIODE_STATUS;
 
 

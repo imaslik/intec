@@ -1,21 +1,40 @@
 #ifndef INC_LIBINTEC_H_
 #define INC_LIBINTEC_H_
 
+#define ENABLE_DBG_PRINT
+#ifdef ENABLE_DBG_PRINT
+#define DBG(x) std::cout << "DEBUG PRINT: " << x << std::endl;
+#else
+#define DBG(x)
+#endif
+
+#define ENABLE_TRACE
+#ifdef ENABLE_TRACE
+#define __TRACE  std::cout << "TRACE PRINT: " <<  __func__ << std::endl;
+#else
+#define __TRACE
+#endif
+
 #include <stdint.h>
 
-#define LIBINTEC_VERSION "beta 0.1"
+//Error codes
+#define STATUS_OK            0
+#define ERROR_FAIL           1
+#define ERROR_NOT_IMPLEMETED 2
+#define ERROR_LIBUSB_FAIL    3
+#define ERROR_NO_DEVICE      4
+#define ERROR_USB_OPEN_FAIL  5
+#define ERROR_WRITE_FAIL     6
+#define ERRoR_READ_FAIL      7
+
+
+#define LIBINTEC_VERSION_STR "beta 0.1"
+#define LIBINTEC_VERSION_MAJOR 0
+#define LIBINTEC_VERSION_MINOR 1
+
 #define MAX_TEST_MSG_SIZE 512
 #define MSG_BUF_SIZE 512
 
-//Error codes
-#define STATUS_OK 0
-#define ERROR_FAIL 1
-#define ERROR_NOT_IMPLEMETED 2
-#define ERROR_LIBUSB_FAIL 3
-#define ERROR_NO_DEVICE 4
-#define ERROR_USB_OPEN_FAIL 5
-
-#define DBG(x) std::cout << "DEBUG PRINT: " << x << std::endl;
 
 #define INTEC_SW_VERSION "REV 1.2.0"
 #define READ_BUF_SIZE 512
@@ -157,11 +176,13 @@ enum IntecTCASEType
 };
 
 int libIntec_Initialize(IntecUsbDeviceType dev);
+int libIntec_GetlibVersion(unsigned int &major, unsigned int &minor);
 void SetIntecLastError(const char * err);
 int libIntec_Exit(void);
 int libIntec_InitializeOverNetwork(IntecUsbDeviceType dev, uint32_t numOfDevices, char **HostName);
 int libtIntec_GetNumOfUsbDevices(int&);
 int libIntec_ReadDeviceByAddr(unsigned int index, unsigned int addr, unsigned char *szBuffer, unsigned int *cbRead);
+int libIntec_ReadDeviceByAddr(unsigned int index, unsigned int addr, unsigned char *szBuffer, unsigned int cbRead);
 int libIntec_WriteDeviceByAddr(unsigned int index, unsigned int addr, unsigned char *szBuffer, unsigned int cbRead);
 int libIntec_GetDeviceMode(int index, IntecDeviceOperationMode &mode);
 int libIntec_SetDeviceMode(int index, IntecDeviceOperationMode mode);
@@ -175,5 +196,6 @@ int libIntec_SetCaseInput(unsigned int index, int cardId, bool enable, int mask)
 int libintec_GetLastError();
 int libIntec_GetTemperatureSource(unsigned int index, IntecTemperatureSourceType, int *source_size, short* sources, unsigned int *timestamp, int* valid_mask);
 int libIntec_GetActualFeedbackType(unsigned int index, int cardId, IntecTemperatureSourceType* actualSrcType);
+
 
 #endif //INC_LIBINTEC_H_
