@@ -24,9 +24,9 @@ public:
 	virtual int32_t Connect()=0;
 	virtual int32_t Diconnect()=0;
 	virtual int32_t Write(unsigned char *szBuffer, unsigned int cbSize)=0;
-	virtual int32_t Read(unsigned char *szBuffer, unsigned int cbRead)=0;
+	virtual int32_t Read(unsigned char *szBuffer, unsigned int *cbRead)=0;
 	virtual int32_t Write(unsigned int addr, unsigned char *szBuffer, unsigned int cbSize)=0;
-	virtual int32_t Read(unsigned int addr, unsigned char *szBuffer, unsigned int cbSize)=0;
+	virtual int32_t Read(unsigned int addr, unsigned char *szBuffer, unsigned int *cbSize)=0;
 	virtual int32_t WriteAndRead(unsigned char * writeBuffer,unsigned int writeSize, unsigned char * readBuffer, unsigned int * readSize)=0;
 	virtual IntecDeviceOperationMode GetDeviceMode()=0;
 	virtual int32_t SetDeviceMode(IntecDeviceOperationMode)=0;
@@ -34,6 +34,10 @@ public:
 	virtual int32_t SetConfiguration(int config){return ERROR_NOT_IMPLEMETED;}
 	virtual void SetDeviceReference(libusb_device*){}
 	virtual int32_t GetPortNumber(){return ERROR_NOT_IMPLEMETED;}
+	virtual int GetDeviceVersion(char *buffer)=0;
+	virtual void SetUsbDeviceType(IntecUsbDeviceType type){}
+	virtual int ClearReadBuffers()=0;
+
 
 };
 

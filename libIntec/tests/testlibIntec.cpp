@@ -33,15 +33,30 @@ int test_main(int argc, char ** argvv)
 	int num_of_devices;
 	if(libtIntec_GetNumOfUsbDevices(num_of_devices) != STATUS_OK)
 	{
-		std::cout << "TEST FAIL: GetNumOfUsbDevices returned error" << std::endl;
+		std::cout << "TEST FAIL: libtIntec_GetNumOfUsbDevices returned error" << std::endl;
 		libIntec_Exit();
 		exit(1);
 	}
 	else
 	{
-		std::cout << "number of device founce " << num_of_devices << std::endl;
+		std::cout << "number of device found " << num_of_devices << std::endl;
 		std::cout << "TEST PASS - libtIntec_GetNumOfUsbDevices" << std::endl;
 	}
+
+	char DeviceVersion[4];
+	if(libIntec_GetDeviceVersion(0, DeviceVersion) != STATUS_OK)
+	{
+		std::cout << "TEST FAIL: libIntec_GetDeviceVersion returned error" << std::endl;
+		libIntec_Exit();
+		exit(1);
+	}
+	else
+	{
+		int version = DeviceVersion[1] << 8 | DeviceVersion[0];
+		std::cout << "version " << version << std::endl;
+		std::cout << "TEST PASS - libIntec_GetDeviceVersion" << std::endl;
+	}
+	std::cout << std::endl << std::endl;
 
 	for (int index = 0; index < num_of_devices; index++)
 	{

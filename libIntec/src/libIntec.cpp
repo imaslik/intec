@@ -51,6 +51,24 @@ int libIntec_GetlibVersion(unsigned int &major, unsigned int &minor)
 	return STATUS_OK;
 }
 
+int libIntec_GetDeviceVersion(unsigned int index, char *buffer)
+{
+	try
+	{
+		IntecMutex.lock();
+		if (libIntecServices->m_Devices[index]->GetDeviceVersion(buffer) != STATUS_OK)
+			throw ClibIntecException("Get device version failed");
+		IntecMutex.unlock();
+		return STATUS_OK;
+	}
+	catch (std::exception& e)
+	{
+		IntecMutex.unlock();
+		SetIntecLastError(e.what());
+		return ERROR_FAIL;
+	}
+}
+
 int libIntec_InitializeOverNetwork(IntecUsbDeviceType dev, uint32_t numOfDevices, char **HostName)
 {
 	try
@@ -99,18 +117,9 @@ int libtIntec_GetNumOfUsbDevices(int& number_devices_found)
 
 int libIntec_ReadDeviceByAddr(unsigned int index, unsigned int addr, unsigned char *szBuffer, unsigned int *cbRead)
 {
-	int res;
-	res = libIntecServices->m_Devices[index]->Read(addr, szBuffer, *cbRead);
-	if (res != STATUS_OK)
-		return (int)res;
-	return STATUS_OK;
-}
-
-int libIntec_ReadDeviceByAddr(unsigned int index, unsigned int addr, unsigned char *szBuffer, unsigned int cbRead)
-{
+	std::cout << "Reading address " << std::hex << addr << std::endl;
 	int res;
 	res = libIntecServices->m_Devices[index]->Read(addr, szBuffer, cbRead);
-	IntecMutex.unlock();
 	if (res != STATUS_OK)
 		return (int)res;
 	return STATUS_OK;
@@ -120,7 +129,6 @@ int libIntec_WriteDeviceByAddr(unsigned int index, unsigned int addr, unsigned c
 {
 	int res;
 	res = libIntecServices->m_Devices[index]->Write(addr, szBuffer, cbRead);
-	IntecMutex.unlock();
 	if (res != STATUS_OK)
 		return (int)res;
 	return STATUS_OK;
@@ -135,9 +143,10 @@ int libIntec_GetDeviceMode(int index, IntecDeviceOperationMode &mode)
 		IntecMutex.unlock();
 		return STATUS_OK;
 	}
-	catch (...)
+	catch (std::exception& e)
 	{
 		IntecMutex.unlock();
+		SetIntecLastError(e.what());
 		return ERROR_FAIL;
 	}
 }
@@ -151,9 +160,10 @@ int libIntec_SetDeviceMode(int index, IntecDeviceOperationMode mode)
 		IntecMutex.unlock();
 		return STATUS_OK;
 	}
-	catch (...)
+	catch (std::exception& e)
 	{
 		IntecMutex.unlock();
+		SetIntecLastError(e.what());
 		return ERROR_FAIL;
 	}
 }
@@ -166,9 +176,10 @@ int libIntec_GetDeviceName(int index, char* Buffer)
 		IntecMutex.unlock();
 		return STATUS_OK;
 	}
-	catch (...)
+	catch (std::exception& e)
 	{
 		IntecMutex.unlock();
+		SetIntecLastError(e.what());
 		return ERROR_FAIL;
 	}
 }
@@ -179,7 +190,7 @@ int libIntec_InitializeCard(unsigned int index)
 	{
 		IntecMutex.lock();
 		if (libIntecServices->m_Operations[index]->Initialize(1) != STATUS_OK)
-			throw ClibIntecException("could not initialize card");
+			throw ClibIntecException("Initialize card failed");
 		IntecMutex.unlock();
 		return STATUS_OK;
 	}
@@ -196,6 +207,8 @@ int libIntec_InitializeCardNoReset(unsigned int index)
 	try
 	{
 		IntecMutex.lock();
+		if (libIntecServices->m_Operations[index]->Initialize(0) != STATUS_OK)
+			throw ClibIntecException("Initialize card failed");
 		IntecMutex.unlock();
 		return STATUS_OK;
 	}
@@ -234,9 +247,10 @@ int libIntec_SetTemperature(unsigned int index, int cardId, float Temp)
 		IntecMutex.unlock();
 		return STATUS_OK;
 	}
-	catch (...)
+	catch (std::exception& e)
 	{
 		IntecMutex.unlock();
+		SetIntecLastError(e.what());
 		return ERROR_FAIL;
 	}
 }
@@ -249,9 +263,10 @@ int libIntex_SetFeedBackControlParameter(unsigned int index, int cardId, IntecTe
 		IntecMutex.unlock();
 		return STATUS_OK;
 	}
-	catch (...)
+	catch (std::exception& e)
 	{
 		IntecMutex.unlock();
+		SetIntecLastError(e.what());
 		return ERROR_FAIL;
 	}
 }
@@ -317,6 +332,23 @@ int libIntec_GetActualFeedbackType(unsigned int index, int cardId, IntecTemperat
 	{
 		IntecMutex.lock();
 		IntecMutex.unlock();
+		return STATUS_OK;
+	}
+	catch (std::exception& e)
+	{
+		IntecMutex.unlock();
+		SetIntecLastError(e.what());
+		return ERROR_FAIL;
+	}
+}
+
+int libIntec_GetDeviceSerialNumber(unsigned int index, IntecCardType type, int cardId, char *serial)
+{
+	try
+	{
+		IntecMutex.lock();
+		IntecMutex.unlock();
+		return ERROR_FAIL;
 		return STATUS_OK;
 	}
 	catch (std::exception& e)

@@ -33,7 +33,6 @@ void printbuffer(unsigned char* buffer, unsigned int size)
 
 int ClibIntecOperations::Initialize(int reset)
 {
-	std::cout << "I am here" << std::endl;
 	m_initialization_flag = false;
 	memset(peci_dts_arr, 0, sizeof(PECI_DTS)*MAX_DTS);
 	memset(peci_pkg_arr, 0, sizeof(PECI_PACKAGE)*MAX_PACKAGES);
@@ -42,53 +41,49 @@ int ClibIntecOperations::Initialize(int reset)
 
 	m_readSize = sizeof(UN_DIODE_STATUS);
 
-	if(libIntec_ReadDeviceByAddr(m_device_index, INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_DIODE_STATUS, (unsigned char *)&diode_status.value, m_readSize) != STATUS_OK)
+	if(libIntec_ReadDeviceByAddr(m_device_index, INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_DIODE_STATUS, (unsigned char *)&diode_status.value, &m_readSize) != STATUS_OK)
 	{
 		return ERROR_FAIL;
 	}
-
 	TDAUDetected_ = diode_status.fields.TDAUDetected;
-	DBG("before looping throw the cards")
-
-	// update the 	InTECDCards_ , PECIModuleExist_
-	if(!IntecGetSysCardsConfiguration())
+	//update the InTECDCards_ , PECIModuleExist_
+	if(IntecGetSysCardsConfiguration() != STATUS_OK)
 		return ERROR_FAIL;
 
 	if(reset)
 	{
 		// update the currentDiodeMask_
-		currentDiodeMask_=0;
-		if(!IntecSetDiodeInputs(true, currentDiodeMask_))
+		currentDiodeMask_ = 0;
+		if(IntecSetDiodeInputs(true, currentDiodeMask_) != STATUS_OK)
 			return ERROR_FAIL;
+
 		// update the currentPFMask_
-		currentPFMask_=0;
-		if(!IntecSetPFInputs(true, currentPFMask_))
+		currentPFMask_ = 0;
+		if(IntecSetPFInputs(true, currentPFMask_) != STATUS_OK)
 			return ERROR_FAIL;
 		// update the currentProcHOTMask_
-		currentProcHOTMask_=0;
-		if(!IntecSetProcHotInputs(true, currentProcHOTMask_))
+		currentProcHOTMask_ = 0;
+		if(IntecSetProcHotInputs(true, currentProcHOTMask_) != STATUS_OK)
 			return ERROR_FAIL;
 
 		// update the currentProcHOTMask_
-		currentPeciMask_=0;
-		if(!IntecSetPeciInputs(true, currentPeciMask_))
+		currentPeciMask_ = 0;
+		if(IntecSetPeciInputs(true, currentPeciMask_) != STATUS_OK)
 			return ERROR_FAIL;
 
-		if(!IntecClearPeciSensorsConfiguration())
+		if(IntecClearPeciSensorsConfiguration() != STATUS_OK)
 			return ERROR_FAIL;
 
-		DBG("before looping throw the cards" << InTECDCards_)
-		for(int i=0; i < InTECDCards_; i++)
+		for (int i = 0; i < InTECDCards_; i++)
 		{
 			currentCaseMask_[i] = 0;
-			if (!IntecSetCaseInputs(i ,true, currentCaseMask_[i]))
+			if (IntecSetCaseInputs(i ,true, currentCaseMask_[i]) != STATUS_OK)
 				return ERROR_FAIL;
 
 			std::cout << "current mask " << currentCaseMask_[i] << std::endl;
 			// read the actual mask back from HW since it can be forced by HW - case0 is forced
-			if (!IntecGetCaseInputs(i, &currentCaseMask_[i]))
+			if (IntecGetCaseInputs(i, &currentCaseMask_[i]) != STATUS_OK)
 				return ERROR_FAIL;
-
 
 			std::cout << "current mask " << currentCaseMask_[i] << std::endl;
 
@@ -97,78 +92,80 @@ int ClibIntecOperations::Initialize(int reset)
 
 			printf("%s\n", workingDir_);
 			//snprintf(eventsFileName,256, "%s%s.xml", workingDir_, EVENTS_FILE_NAME);
-			//IntecLoadandConfigureEvents(i,eventsFileName,false);
+			IntecLoadandConfigureEvents(i,ConfigFileDir_, false);
 		}
 	}
 	else
 	{
-		if(!IntecGetDiodeInputs(&currentDiodeMask_))
+		DBG("reset off")
+		if(IntecGetDiodeInputs(&currentDiodeMask_) != STATUS_OK)
 			return ERROR_FAIL;
 
-		if(!IntecGetPFInputs(&currentPFMask_))
-			return ERROR_FAIL;
-
-
-		if(!IntecGetProcHotInputs(&currentProcHOTMask_))
+		if(IntecGetPFInputs(&currentPFMask_) != STATUS_OK)
 			return ERROR_FAIL;
 
 
-		if(!IntecGetPeciInputs(&currentPeciMask_))
+		if(IntecGetProcHotInputs(&currentProcHOTMask_) != STATUS_OK)
+			return ERROR_FAIL;
+
+
+		if(IntecGetPeciInputs(&currentPeciMask_) != STATUS_OK)
 			return ERROR_FAIL;
 
 		for(int i=0; i < InTECDCards_; i++)
 		{
-			if(!IntecGetCaseInputs(i,&currentCaseMask_[i]))
+			if(IntecGetCaseInputs(i,&currentCaseMask_[i]) != STATUS_OK)
 				return ERROR_FAIL;
-			char eventsFileName[256];
+			//char eventsFileName[256];
 			getcwd(workingDir_, sizeof(workingDir_));
 			//GetWorkDir(sizeof(workingDir_), workingDir_);
 			//sprintf_s(eventsFileName,256, "%s%s.xml", workingDir_, EVENTS_FILE_NAME);
-			IntecLoadandConfigureEvents(i,eventsFileName,false);
+			IntecLoadandConfigureEvents(i, ConfigFileDir_, false);
 		}
 	}
+
+	DBG("after reset section")
 	// build Intec Tests Error messages vectors
-	if(!buildIntecBenchSelfTestErrorMessages())
+	if(buildIntecBenchSelfTestErrorMessages() != STATUS_OK)
 		return ERROR_FAIL;
-	if(!buildIntecStandaloneSelfTestErrorMessages())
+	if(buildIntecStandaloneSelfTestErrorMessages() != STATUS_OK)
 		return ERROR_FAIL;
-	if(!buildIntecBasicFunctionalitySelfTestErrorMessages())
+	if(buildIntecBasicFunctionalitySelfTestErrorMessages() != STATUS_OK)
 		return ERROR_FAIL;
 
 	// build IntecD Tests Error messages vectors
-	if(!buildIntecDBenchSelfTestErrorMessages())
+	if(buildIntecDBenchSelfTestErrorMessages() != STATUS_OK)
 		return ERROR_FAIL;
-	if(!buildIntecDStandaloneSelfTestErrorMessages())
+	if(buildIntecDStandaloneSelfTestErrorMessages() != STATUS_OK)
 		return ERROR_FAIL;
-	if(!buildIntecDBasicFunctionalitySelfTestErrorMessages())
+	if(buildIntecDBasicFunctionalitySelfTestErrorMessages() != STATUS_OK)
 		return ERROR_FAIL;
-	if(!buildIntecDWaterModuleBenchTestErrorMessages())
+	if(buildIntecDWaterModuleBenchTestErrorMessages() != STATUS_OK)
 		return ERROR_FAIL;
-	if(!peciFrequencyTablesInitialization())
+	if(peciFrequencyTablesInitialization() != STATUS_OK)
 		return ERROR_FAIL;
-
 
 	m_initialization_flag = true;
 	Initialized_= true;
-	return Initialized_;
-
+	return STATUS_OK;
 }
 
 const int ClibIntecOperations::IntecGetSysCardsConfiguration()
 {
 	UN_CONNECTED_DEVICES connectedDevices;
+	InTECDCards_= 0;
+	PECIModuleExist_ = false;
+	readSize_ = sizeof(UN_CONNECTED_DEVICES);
 
-	InTECDCards_=0;
-	PECIModuleExist_=false;
-	readSize_=sizeof(UN_CONNECTED_DEVICES);
-	if(libIntec_ReadDeviceByAddr(deviceIndex_,INTEC_BASE_ADDR|OFFSET_UNIT_GENERAL|OFFSET_CONNECTED_DEVICES,(UCHAR *)&connectedDevices.value,&readSize_)!= STATUS_OK)
+	if(libIntec_ReadDeviceByAddr(deviceIndex_, INTEC_BASE_ADDR|OFFSET_UNIT_GENERAL|OFFSET_CONNECTED_DEVICES, (unsigned char *)&connectedDevices.value, &readSize_) != STATUS_OK)
 	{
 		SetIntecLastError("IntecGetSysCardsConfiguration:: Failed to Read OFFSET_CONNECTED_DEVICES");
 		return ERROR_FAIL;
 	}
-	//printf("connectedDevices.value=%x\n",connectedDevices.value);
+	printf("connectedDevices.value=%x\n", connectedDevices.value);
+	return ERROR_FAIL;
 	if(connectedDevices.fields.PECIModule)
-		PECIModuleExist_= true;
+		PECIModuleExist_ = true;
 	if(connectedDevices.fields.InTECD0)
 		InTECDCards_++;
 	if(connectedDevices.fields.InTECD1)
@@ -178,49 +175,52 @@ const int ClibIntecOperations::IntecGetSysCardsConfiguration()
 	if(connectedDevices.fields.InTECD3)
 		InTECDCards_++;
 
-	return true;
+	return STATUS_OK;
 }
 
 const int ClibIntecOperations::IntecSetDiodeInputs(bool enable, unsigned int mask)
 {
+	DBG("IntecSetDiodeInputs")
 	if(enable)
-		currentDiodeMask_ |=mask;
+		currentDiodeMask_ |= mask;
 	else
-		currentDiodeMask_ &=((~mask)&0xf);
+		currentDiodeMask_ &= ((~mask)&0xf);
+
 	UN_DIODE_CFG diode_cfg;
 	writeSize_=sizeof(UN_DIODE_CFG);
 	diode_cfg.fields.PollDiodes=currentDiodeMask_;
 	if(libIntec_WriteDeviceByAddr(deviceIndex_,INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_DIODE_CFG,(UCHAR *)&diode_cfg.value,writeSize_))
 	{
-		return false;
+		return ERROR_FAIL;
 	}
-	return true;
+	return STATUS_OK;
 
 }
 
 const int ClibIntecOperations::IntecSetPFInputs(bool enable, unsigned int mask)
 {
+	DBG("IntecSetPFInputs")
 	if(enable)
 		currentPFMask_ |=mask;
 	else
 		currentPFMask_ &=((~mask)&0xf);
 
 	UN_PF_CFG pf_cfg;
-	writeSize_=sizeof(UN_PF_CFG);
-	pf_cfg.fields.PollPF=currentPFMask_;
+	writeSize_= sizeof(UN_PF_CFG);
+	pf_cfg.fields.PollPF = currentPFMask_;
 	if(libIntec_WriteDeviceByAddr(deviceIndex_,INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_PF_CFG, (unsigned char *)&pf_cfg.value, writeSize_))
 	{
 		SetIntecLastError("IntecSetPFInputs: Failed to Write  OFFSET_PF_CFG");
-		return false;
+		return ERROR_FAIL;
 	}
-	return true;
+	return STATUS_OK;
 }
 
 const int ClibIntecOperations::IntecSetProcHotInputs(bool enable, unsigned int mask)
 {
 	//Clear Prochot status fields for a specific channel by setting the appropriate bit of ChResetCounter field in PROCHOT_CFG register. 
-	if(!IntecClearProcHotEventsCounter(-1))
-		return false;
+	if(IntecClearProcHotEventsCounter(-1) != STATUS_OK)
+		return ERROR_FAIL;
 	//Select which Prochot input to enable by setting the appropriate bits of the PollProchot field in PROCHOT_CFG register.
 	if(enable)
 		currentProcHOTMask_ |=mask;
@@ -231,7 +231,7 @@ const int ClibIntecOperations::IntecSetProcHotInputs(bool enable, unsigned int m
 	if(libIntec_ReadDeviceByAddr(deviceIndex_, INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_PROCHOT_CFG,(unsigned char *) &prochot_cfg.value, &readSize_) != STATUS_OK)
 	{
 		SetIntecLastError("IntecSetProcHotInputs::Failed to Read OFFSET_PROCHOT_CFG");
-		return false;
+		return ERROR_FAIL;
 	}
 	prochot_cfg.fields.PollProchot=currentProcHOTMask_;
 
@@ -241,9 +241,9 @@ const int ClibIntecOperations::IntecSetProcHotInputs(bool enable, unsigned int m
 	if(libIntec_WriteDeviceByAddr(deviceIndex_,INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_PROCHOT_CFG,(unsigned char *)&prochot_cfg.value, writeSize_))
 	{
 		SetIntecLastError("IntecSetProcHotInputs: Failed to Write  OFFSET_PROCHOT_CFG");
-		return false;
+		return ERROR_FAIL;
 	}
-	return true;
+	return STATUS_OK;
 }
 
 const int ClibIntecOperations::IntecClearProcHotEventsCounter(int input_num)
@@ -261,58 +261,58 @@ const int ClibIntecOperations::IntecClearProcHotEventsCounter(int input_num)
 	if (libIntec_ReadDeviceByAddr(deviceIndex_,INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_PROCHOT_CFG,(unsigned char *)&prochot_cfg.value, &readSize_) != STATUS_OK)
 	{
 		SetIntecLastError("IntecClearProcHotEventsCounter:: Failed to Read OFFSET_PROCHOT_CFG");
-		return false;
+		return ERROR_FAIL;
 	}
 
 	prochot_cfg.fields.ChResetCounter=resetVal;
 
 	writeSize_=sizeof(UN_PROCHOT_CFG);
 
-	if (libIntec_WriteDeviceByAddr(deviceIndex_,INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_PROCHOT_CFG,(unsigned char *)&prochot_cfg.value, writeSize_))
+	if (libIntec_WriteDeviceByAddr(deviceIndex_, INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_PROCHOT_CFG,(unsigned char *)&prochot_cfg.value, writeSize_))
 	{
 		SetIntecLastError("IntecClearProcHotEventsCounter: Failed to Write  OFFSET_PROCHOT_CFG");
-		return false;
+		return ERROR_FAIL;
 	}
-	return true;
+	return STATUS_OK;
 }
 
 const int ClibIntecOperations::IntecSetPeciInputs(bool enable, unsigned int mask)
 {
-	if(!PECIModuleExist_)
+	DBG("IntecSetPeciInputs")
+	if (!PECIModuleExist_)
 	{
 		SetIntecLastError("IntecSetPeciInputs() - Peci Module does not exist");
-		return false;
+		return ERROR_FAIL;
 	}
 
-	if(enable)
-		currentPeciMask_ |=mask;
+	if (enable)
+		currentPeciMask_ |= mask;
 	else
 		currentPeciMask_ &=((~mask)&0xffff);
 
 	UN_P_PECI_CFG peci_cfg;
 	writeSize_= sizeof(UN_P_PECI_CFG);
 	peci_cfg.fields.PollDts = currentPeciMask_;
-	if(libIntec_WriteDeviceByAddr(deviceIndex_, PECI_DEVICE_BASE_ADDR |OFFSET_UNIT_P_DTS_CFG|OFFSET_P_PECI_CFG, (unsigned char *)&peci_cfg.value, writeSize_))
+	if (libIntec_WriteDeviceByAddr(deviceIndex_, PECI_DEVICE_BASE_ADDR |OFFSET_UNIT_P_DTS_CFG|OFFSET_P_PECI_CFG, (unsigned char *)&peci_cfg.value, writeSize_))
 	{
 		SetIntecLastError("IntecSetPeciInputs:: Failed to Write  OFFSET_P_PECI_CFG");
-		return false;
+		return ERROR_FAIL;
 	}
-	return true;
+	return STATUS_OK;
 }
-
 
 const int ClibIntecOperations::IntecClearPeciSensorsConfiguration()
 {
 		// build the register and write it to HW.
 		UN_P_CFG_DTS0 dts_cfg_reg;
 		dts_cfg_reg.value=0;
-		writeSize_=sizeof(UN_P_CFG_DTS0);
+		writeSize_= sizeof(UN_P_CFG_DTS0);
 		for(int channel=0; channel< MAX_DTS; channel++)
 		{
 			if(libIntec_WriteDeviceByAddr(deviceIndex_,PECI_DEVICE_BASE_ADDR |OFFSET_UNIT_P_DTS_CFG|(OFFSET_P_CFG_DTS0+channel),(UCHAR *)&dts_cfg_reg.value,writeSize_))
 			{
 				SetIntecLastError("IntecClearPeciSensorsConfiguration:: Failed to Write  OFFSET_P_CFG_DTS0 +channel");
-				return false;
+				return ERROR_FAIL;
 			}
 		}
 		usleep(50);
@@ -323,10 +323,10 @@ const int ClibIntecOperations::IntecClearPeciSensorsConfiguration()
 		if(libIntec_WriteDeviceByAddr(deviceIndex_,PECI_DEVICE_BASE_ADDR |OFFSET_UNIT_P_DTS_CFG|OFFSET_P_CFG_DTS_UPDATE,(UCHAR *)&dts_update_reg.value,writeSize_))
 		{
 			SetIntecLastError("IntecClearPeciSensorsConfiguration:: Failed to Write  OFFSET_P_CFG_DTS_UPDATE ");
-			return false;
+			return ERROR_FAIL;
 		}
 
-		return true;
+		return STATUS_OK;
 }
 
 const int ClibIntecOperations::IntecSetCaseInputs(int cardId,bool enable, unsigned int mask)
@@ -343,17 +343,16 @@ const int ClibIntecOperations::IntecSetCaseInputs(int cardId,bool enable, unsign
 		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)|OFFSET_UNIT_D_CASE|OFFSET_D_CASE_CFG,(UCHAR *)&case_cfg.value,&readSize_))
 		{
 			SetIntecLastError("IntecSetCaseInputs:: Failed to Read  OFFSET_D_CASE_CFG");
-			return false;
+			return ERROR_FAIL;
 		}
 
 		case_cfg.fields.PollTcase=currentCaseMask_[cardId];
 		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)|OFFSET_UNIT_D_CASE|OFFSET_D_CASE_CFG,(UCHAR *)&case_cfg.value,writeSize_))
 		{
 			SetIntecLastError("Failed to Write  OFFSET_D_CASE_CFG");
-			return false;
+			return ERROR_FAIL;
 		}
-		return true;
-
+		return STATUS_OK;
 
 	}
 	else

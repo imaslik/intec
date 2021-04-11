@@ -141,8 +141,6 @@ public:
 	virtual bool buildIntecDWaterModuleBenchTestErrorMessages();
 	virtual const int peciFrequencyTablesInitialization();
 
-
-
 	virtual const int IntecGetTemperature(int cardId,float *temprature, unsigned int * timestamp);
 	virtual const int IntecGetTemperature(int cardId,unsigned short *temprature, unsigned int * timestamp);
 
@@ -196,6 +194,10 @@ private:
 	unsigned char writeBuff_[READ_BUF_SIZE];
 	char msg_buf[MSG_BUF_SIZE];
 	char workingDir_[MAX_BUF_SIZE];
+
+	char configFileDir[4096];
+	const char* ConfigFileDir_ = "/etc/libIntec/InTECEventsConfiguration.xml";
+
 	Int2String IntecBenchSelfTestErrorMessages;
 	Int2String IntecStandaloneSelfTestErrorMessages;
 	Int2String IntecBasicFunctionalitySelfTestErrorMessages;

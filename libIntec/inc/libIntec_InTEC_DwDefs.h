@@ -1,6 +1,8 @@
 #ifndef INC_LIBINTEC_INTEC_DWDEFS_H_
 #define INC_LIBINTEC_INTEC_DWDEFS_H_
 
+
+#include "libIntec_DwDefs.h"
 #pragma pack(push, 1)                       // force byte alignment
 // -------------------------------------------------------------------------
 // Register and Field Definitions

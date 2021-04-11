@@ -72,12 +72,11 @@ ClibIntecServices::~ClibIntecServices()
 		delete m_Devices[i];
 		delete m_Operations[i];
 	}
-	libusb_free_device_list(m_libusb_devv, 1);
 	libusb_exit(m_libusb_ctx);
 }
 
 void ClibIntecServices::Initialize()
-{__TRACE
+{
 	InitializeLibusb();
 	InitializeUsbDevices();
 }
@@ -98,7 +97,7 @@ uint32_t ClibIntecServices::GetUsbDevicesCount()
 }
 
 const int32_t ClibIntecServices::InitializeLibusb()
-{__TRACE
+{
 	if(libusb_init(&m_libusb_ctx) != 0)
 	{
 		throw ClibIntecException("libusb returned error: initialization failed");
@@ -145,7 +144,7 @@ ClibIntecDevice *ClibIntecServices::operator[](uint32_t i)
 }
 
 const int32_t ClibIntecServices::InitializeUsbDevices()
-{__TRACE
+{
 	m_libusb_devc = libusb_get_device_list(m_libusb_ctx, &m_libusb_devv);
 	if (m_libusb_devc < 0)
 	{
@@ -181,14 +180,18 @@ const int32_t ClibIntecServices::InitializeUsbDevices()
 
 				m_Devices[current_index]->SetDeviceReference(device);
 				m_Devices[current_index]->InitializeDevice(current_index);
+				m_Devices[current_index]->SetUsbDeviceType(m_DevType);
 
 				if (m_Devices[current_index]->Open() != STATUS_OK)
 					throw ClibIntecException("Failed to open usb devcie");
 
 				if (m_Devices[current_index]->Connect() != STATUS_OK)
 					throw ClibIntecException("Failed to connect to usb device");
+
+				m_Devices[current_index]->ClearReadBuffers();
 			}
 		}
 	}
+	libusb_free_device_list(m_libusb_devv, 1);
 	return STATUS_OK;
 }

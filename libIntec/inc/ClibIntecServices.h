@@ -25,7 +25,6 @@
 
 class ClibIntecServices
 {
-
 public:
 	ClibIntecServices(IntecUsbDeviceType dev=IntecH);
 	ClibIntecServices(IntecUsbDeviceType dev, uint32_t numOfDevices, char **HostName);

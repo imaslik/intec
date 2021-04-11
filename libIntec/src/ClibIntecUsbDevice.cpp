@@ -23,9 +23,18 @@ int32_t ClibIntecUsbDevice::Open()
 	if (m_usb_device == NULL)
 		throw ClibIntecException("error at USB device open. libusb device not present");
 
+	int rc;
 	if (libusb_open(m_usb_device, &m_usb_device_handle) == 0)
 	{
+		//reseting the device
 		m_device_open_flag = true;
+		rc = libusb_reset_device(m_usb_device_handle);
+		if (rc != 0)
+			return ERROR_FAIL;
+
+//		rc = libusb_set_configuration(m_usb_device_handle, 1);
+//		if (rc != 0)
+//			return ERROR_FAIL;
 		return STATUS_OK;
 	}
 	else
@@ -35,12 +44,13 @@ int32_t ClibIntecUsbDevice::Open()
 }
 
 int32_t ClibIntecUsbDevice::Close()
-{__TRACE
+{
 	if (m_device_open_flag == true)
 	{
 		if (m_usb_device_handle != NULL)
 		{
 			libusb_close(m_usb_device_handle);
+			m_device_open_flag = false;
 			return STATUS_OK;
 		}
 	}
@@ -54,7 +64,6 @@ int32_t ClibIntecUsbDevice::Connect()
 
 //	if (libusb_kernel_driver_active(m_usb_device_handle, m_interface_nubmer) == LIBUSB_SUCCESS)
 //	{
-//		DBG("interface is taken")
 //		return ERROR_FAIL;
 //	}
 	else if (libusb_set_auto_detach_kernel_driver(m_usb_device_handle, m_interface_nubmer) == LIBUSB_SUCCESS)
@@ -89,6 +98,16 @@ int32_t ClibIntecUsbDevice::Diconnect()
 	return STATUS_OK;
 }
 
+void printbuffer(unsigned char * buffer, int size)
+{
+	for (int i=0; i < size; i++)
+	{
+		printf("%02hhx", buffer[i]);
+		if (i%80==0 && i!=0)
+			printf("\n");
+	}
+	printf("\n");
+}
 int32_t ClibIntecUsbDevice::Write(unsigned char *szBuffer, unsigned int cbWrite)
 {
 	if (m_usb_device_handle == NULL)
@@ -105,19 +124,18 @@ int32_t ClibIntecUsbDevice::Write(unsigned char *szBuffer, unsigned int cbWrite)
 	return STATUS_OK;
 }
 
-int32_t ClibIntecUsbDevice::Read(unsigned char *szBuffer, unsigned int cbRead)
+int32_t ClibIntecUsbDevice::Read(unsigned char *szBuffer, unsigned int *cbRead)
 {
 	if (m_usb_device_handle == NULL)
 	{
 		return ERROR_FAIL;
 	}
-	int actual_transffer=0;
-	int status = libusb_bulk_transfer(m_usb_device_handle, m_usb_in_endpoint_addr, szBuffer, (int)cbRead, &actual_transffer, DEFAULT_RX_TIMEOUT_MS);
-
-	if (status !=0)
-	{
-		return ERROR_FAIL;
-	}
+	int length = (int)*cbRead;
+	int  transferred = 0;
+	int rc = libusb_bulk_transfer(m_usb_device_handle, m_usb_in_endpoint_addr, szBuffer, length, &transferred, DEFAULT_RX_TIMEOUT_MS);
+	if (rc != 0)
+		return rc;
+	*cbRead = transferred;
 	return STATUS_OK;
 }
 
@@ -143,7 +161,6 @@ int32_t ClibIntecUsbDevice::Write(unsigned int addr, unsigned char *szBuffer, un
 		sendBuffer[5] = *(unsigned char*)&currPktSize-PKT_HEADER_LENGTH;
 
 		memcpy(sendBuffer+PKT_HEADER_LENGTH,szBuffer+currIndex,currPktSize - PKT_HEADER_LENGTH);
-
 		if(Write(sendBuffer, currPktSize) ==  STATUS_OK)
 			currIndex += currPktSize-PKT_HEADER_LENGTH;
 		else
@@ -152,19 +169,21 @@ int32_t ClibIntecUsbDevice::Write(unsigned int addr, unsigned char *szBuffer, un
 	return STATUS_OK;
 }
 
-int32_t ClibIntecUsbDevice::Read(unsigned int addr, unsigned char *szBuffer, unsigned int cbSize)
+int32_t ClibIntecUsbDevice::Read(unsigned int addr, unsigned char *szBuffer, unsigned int *cbSize)
 {
-	unsigned int actualTReadSize = cbSize;
+	unsigned int actualTReadSize = m_usb_max_in_packet_size;
 	unsigned char sendBuffer[PKT_HEADER_LENGTH];
 	sendBuffer[0] = USB_READ_WORD_COMMAND;
-	memcpy(&sendBuffer[1], (unsigned char*)&addr,REG_WIDTH);
-	sendBuffer[5] = cbSize;
+	memcpy(&sendBuffer[1], (unsigned char*)&addr, REG_WIDTH);
+	sendBuffer[5] = *cbSize;
 	unsigned char internalReadBuff[MAX_READ_PKT_SIZE];
-	if(!WriteAndRead(sendBuffer,PKT_HEADER_LENGTH, internalReadBuff, &actualTReadSize))
+	if (WriteAndRead(sendBuffer, PKT_HEADER_LENGTH, internalReadBuff, &actualTReadSize) != STATUS_OK)
+	{
 		return ERROR_FAIL;
+	}
 	else
 	{
-		memcpy(szBuffer,internalReadBuff,min(cbSize,actualTReadSize)); // take the min to preven memory crash
+		memcpy(szBuffer, internalReadBuff, min(*cbSize, actualTReadSize)); // take the min to preven memory crash
 		return STATUS_OK;
 	}
 }
@@ -173,20 +192,14 @@ int32_t ClibIntecUsbDevice::WriteAndRead(unsigned char *writeBuffer,unsigned int
 {
 	unsigned int reqToRead = *readSize;
 	int rc;
-
 	rc = Write(writeBuffer, writeSize);
-
 	if (rc != STATUS_OK)
 		return rc;
 
-	rc = Read(readBuffer, reqToRead);
+	usleep(1);
+	rc = Read(readBuffer, &reqToRead);
 	if (rc != STATUS_OK)
 		return rc;
-
-	if(reqToRead < PKT_HEADER_LENGTH)
-	{
-		return ERROR_FAIL;
-	}
 
 	unsigned char status = readBuffer[0];
 	if(!(status &0x1))
@@ -199,9 +212,20 @@ int32_t ClibIntecUsbDevice::WriteAndRead(unsigned char *writeBuffer,unsigned int
 		return ERROR_FAIL;
 	}
 	if (!(status &0x2))
+	{
+		// status 0x2 data not ready
+		rc = Write(writeBuffer, writeSize);
+		if (rc != STATUS_OK)
+			return rc;
+
+		usleep(5);
+		rc = Read(readBuffer, &reqToRead);
+		if (rc != STATUS_OK)
+			return rc;
+	}
 	*readSize = readBuffer[PKT_HEADER_LENGTH-1];
 	// copy only the DATA - remove the header
-	memcpy(readBuffer,&readBuffer[PKT_HEADER_LENGTH],min(*readSize,MAX_READ_PKT_SIZE-PKT_HEADER_LENGTH));
+	memcpy(readBuffer,&readBuffer[PKT_HEADER_LENGTH], min(*readSize, MAX_READ_PKT_SIZE-PKT_HEADER_LENGTH));
 
 	return STATUS_OK;
 }
@@ -212,7 +236,7 @@ ClibIntecUsbDevice::~ClibIntecUsbDevice()
 }
 
 int32_t ClibIntecUsbDevice::InitializeDevice(unsigned int devIndex)
-{__TRACE
+{
 	m_DeviceIndex = devIndex;
 	if (m_usb_device != NULL)
 	{
@@ -321,4 +345,43 @@ int32_t ClibIntecUsbDevice::GetPortNumber()
 	{
 		return ERROR_FAIL;
 	}
+}
+
+int ClibIntecUsbDevice::GetDeviceVersion(char *buffer)
+{
+	if (m_DeviceType == IntecH)
+	{
+		UN_FW_VERSION intec_ver;
+		unsigned int readSize_ = sizeof(UN_FW_VERSION);
+		if (Read(INTEC_BASE_ADDR|OFFSET_UNIT_GENERAL|OFFSET_FW_VERSION, (unsigned char*)&intec_ver.value, &readSize_) != STATUS_OK)
+		{
+			SetIntecLastError("CIntecUSBDeviceH::GetDeviceVersion:Failed to Read IntecCard version ");
+			return ERROR_FAIL;
+		}
+		std::cout << "intec FW version " << intec_ver.value << std::endl;
+		memcpy(buffer,(char *)&intec_ver.value, readSize_);
+		return STATUS_OK;
+	}
+
+	return ERROR_FAIL;
+}
+
+void ClibIntecUsbDevice::SetUsbDeviceType(IntecUsbDeviceType type)
+{
+	m_DeviceType = type;
+}
+
+int ClibIntecUsbDevice::ClearReadBuffers()
+{
+	if (m_device_connect_flag)
+	{
+		unsigned char buffer[8];
+		unsigned int size = sizeof(buffer);
+		if (Read(1, buffer, &size) != STATUS_OK)
+		{
+			return ERROR_FAIL;
+		}
+		return STATUS_OK;
+	}
+
 }

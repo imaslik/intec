@@ -9,10 +9,13 @@
 #define SRC_CLIBINTECUSBDEVICE_H_
 
 #include <stdint.h>
+#include <string.h>
+#include <unistd.h>
 #include "libIntec.h"
 #include <libusb-1.0/libusb.h>
 #include "ClibIntecDevice.h"
 #include "ClibIntecException.h"
+#include "libIntec_InTEC_DwDefs.h"
 #include "libIntec_PECIModule_DwDefs.h"
 
 #define min(a,b) (((a) < (b)) ? (a) : (b))
@@ -33,21 +36,25 @@ public:
 	ClibIntecUsbDevice();
 	ClibIntecUsbDevice(IntecUsbDeviceType devType, uint32_t devIndex, IntecDeviceOperationMode mode, IntecDeviceDriverType driverType);
 	virtual ~ClibIntecUsbDevice();
+	virtual void SetUsbDeviceType(IntecUsbDeviceType type);
 	virtual int32_t InitializeDevice(unsigned int);
 	virtual int32_t Open();
 	virtual int32_t Close();
 	virtual int32_t Connect();
 	virtual int32_t Diconnect();
 	virtual int32_t Write(unsigned char *szBuffer, unsigned int cbSize);
-	virtual int32_t Read(unsigned char *szBuffer, unsigned int cbRead);
+	virtual int32_t Read(unsigned char *szBuffer, unsigned int *cbRead);
+
 	virtual int32_t Write(unsigned int addr, unsigned char *szBuffer, unsigned int cbSize);
-	virtual int32_t Read(unsigned int addr, unsigned char *szBuffer, unsigned int cbSize);
+	virtual int32_t Read(unsigned int addr, unsigned char *szBuffer, unsigned int *cbSize);
 	virtual int32_t WriteAndRead(unsigned char * writeBuffer,unsigned int writeSize, unsigned char * readBuffer, unsigned int * readSize);
 	virtual IntecDeviceOperationMode GetDeviceOperationMode(){return UndefinedOpMode;}
 	virtual int GetConfiguration();
 	virtual int32_t SetConfiguration(int config);
 	virtual void SetDeviceReference(libusb_device* usb_dev);
 	virtual int32_t GetPortNumber();
+	virtual int GetDeviceVersion(char *buffer);
+	virtual int ClearReadBuffers();
 
 public:
 
