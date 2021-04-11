@@ -2109,6 +2109,50 @@ float ClibIntecOperations::convertIntecToRealTemperature(unsigned short IntecTem
 	return	((float)(IntecTemperature)/10 - 64);
 }
 
+const int ClibIntecOperations::IntecSetTemperature(int cardId, unsigned short temprature)
+{
+	if (IsCardExist(cardId))
+	{
+		// first that the D_FEEDBACK status  that at least one source is available
+		UN_D_FEEDBACK_STATUS	feedback_status;
+		UN_D_FEEDBACK_SETPOINT  feedback_setpoint;
+		readSize_=sizeof(UN_D_FEEDBACK_STATUS);
+		if (libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)|OFFSET_UNIT_D_CONTROL|OFFSET_D_FEEDBACK_STATUS,(unsigned char *)&feedback_status.value,&readSize_)!= STATUS_OK)
+		{
+//			sprintf_s(msg_buf,MSG_BUF_SIZE,"IntecSetTemperature: Failed to Read  IntecDCard (%d) OFFSET_D_FEEDBACK_STATUS",cardId);
+//			SetIntecLastError(msg_buf);
+			return ERROR_FAIL;
+		}
+		if(feedback_status.fields.SourceValid==0)
+		{
+//			sprintf_s(msg_buf,MSG_BUF_SIZE,"IntecSetTemperature: No valid input for temperature IntecDCard (%d)",cardId);
+//			SetIntecLastError(msg_buf);
+			return ERROR_FAIL;
+		}
+		feedback_setpoint.fields.SetPoint=temprature;
+		writeSize_=sizeof(UN_D_FEEDBACK_SETPOINT);
+		if (libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)|OFFSET_UNIT_D_CONTROL|OFFSET_D_FEEDBACK_SETPOINT,(unsigned char *)&feedback_setpoint.value,writeSize_) != STATUS_OK)
+		{
+//			sprintf_s(msg_buf,MSG_BUF_SIZE,"IntecSetTemperature:Failed to Write  IntecDCard (%d) OFFSET_D_FEEDBACK_SETPOINT",cardId);
+//			SetIntecLastError(msg_buf);
+			return ERROR_FAIL;
+		}
+		return STATUS_OK;
+
+	}
+	else
+	{
+//		sprintf_s(msg_buf,MSG_BUF_SIZE,"IntecSetTemperature :IntecDCard (%d) Not Exist ",cardId);
+//		SetIntecLastError(msg_buf);
+	}
+	return ERROR_FAIL;
+}
+
+const int ClibIntecOperations::IntecSetTemperature(int cardId, float temprature)
+{
+	return IntecSetTemperature(cardId, convertRealToIntecTemperature(temprature));
+}
+
 const int ClibIntecOperations::IntecSetAllEventDisableEnable(int cardId, EventType evType)
 {
 	switch(evType)

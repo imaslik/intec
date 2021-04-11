@@ -243,6 +243,8 @@ int libIntec_SetTemperature(unsigned int index, int cardId, float Temp)
 	try
 	{
 		IntecMutex.lock();
+		if (libIntecServices->m_Operations[index]->IntecSetTemperature(cardId, Temp) != STATUS_OK)
+			throw ClibIntecException("Set Temperature returned has failed");
 		IntecMutex.unlock();
 		return STATUS_OK;
 	}

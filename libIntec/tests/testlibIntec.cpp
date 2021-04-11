@@ -74,8 +74,16 @@ int test_main(int argc, char ** argvv)
 			std::cout << "TEST PASS - libIntec_InitializeCard" << std::endl;
 		}
 
+
 		int CardId = 0;
-		float Temperature = 0;
+		float Temperature = 25;
+
+		if (libIntec_SetTemperature(index, CardId, Temperature) != STATUS_OK)
+		{
+			std::cout << "TEST FAIL: libIntec_GetTemperature return error" << std::endl;
+			libIntec_Exit();
+			exit(1);
+		}
 		unsigned int TimeStamp = 0;
 		for (int j=0; j< 10; j++)
 		{

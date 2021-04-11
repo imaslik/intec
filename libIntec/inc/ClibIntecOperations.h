@@ -143,6 +143,8 @@ public:
 
 	virtual const int IntecGetTemperature(int cardId,float *temprature, unsigned int * timestamp);
 	virtual const int IntecGetTemperature(int cardId,unsigned short *temprature, unsigned int * timestamp);
+	virtual const int IntecSetTemperature(int cardId,unsigned short temprature);
+	virtual  const int IntecSetTemperature(int cardId,float temprature);
 
 protected:
 	virtual const int IntecSetAllEventDisableEnable(int cardId,EventType evType);
