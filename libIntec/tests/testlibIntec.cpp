@@ -74,7 +74,7 @@ int test_main(int argc, char ** argvv)
 			std::cout << "TEST PASS - libIntec_InitializeCard" << std::endl;
 		}
 
-		int CardId = 2;
+		int CardId = 0;
 		float Temperature = 0;
 		unsigned int TimeStamp = 0;
 		for (int j=0; j< 10; j++)

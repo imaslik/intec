@@ -117,7 +117,6 @@ int libtIntec_GetNumOfUsbDevices(int& number_devices_found)
 
 int libIntec_ReadDeviceByAddr(unsigned int index, unsigned int addr, unsigned char *szBuffer, unsigned int *cbRead)
 {
-	std::cout << "Reading address " << std::hex << addr << std::endl;
 	int res;
 	res = libIntecServices->m_Devices[index]->Read(addr, szBuffer, cbRead);
 	if (res != STATUS_OK)

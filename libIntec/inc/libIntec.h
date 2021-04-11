@@ -1,7 +1,7 @@
 #ifndef INC_LIBINTEC_H_
 #define INC_LIBINTEC_H_
 
-//#define ENABLE_DBG_PRINT
+#define ENABLE_DBG_PRINT
 #ifdef ENABLE_DBG_PRINT
 #define DBG(x) std::cout << "DEBUG PRINT: " << x << std::endl;
 #else
