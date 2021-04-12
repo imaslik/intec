@@ -151,8 +151,7 @@ int32_t ClibIntecUsbDevice::Write(unsigned int addr, unsigned char *szBuffer, un
 	// Split data to 64 bytes sized packets (Microchip f/w limitation)
 	while (currIndex < cbSize)
 	{
-		unsigned char currPktSize = (unsigned char)((PKT_HEADER_LENGTH + cbSize - currIndex >= MAX_WRITE_PKT_SIZE) ? MAX_WRITE_PKT_SIZE :
-		PKT_HEADER_LENGTH + cbSize - currIndex);
+		unsigned char currPktSize = (unsigned char)(((int)(PKT_HEADER_LENGTH + cbSize - currIndex) >= MAX_WRITE_PKT_SIZE) ? MAX_WRITE_PKT_SIZE : PKT_HEADER_LENGTH + cbSize - currIndex);
 
 		// Prepare data for sending
 
@@ -225,7 +224,7 @@ int32_t ClibIntecUsbDevice::WriteAndRead(unsigned char *writeBuffer,unsigned int
 	}
 	*readSize = readBuffer[PKT_HEADER_LENGTH-1];
 	// copy only the DATA - remove the header
-	memcpy(readBuffer,&readBuffer[PKT_HEADER_LENGTH], min(*readSize, MAX_READ_PKT_SIZE-PKT_HEADER_LENGTH));
+	memcpy(readBuffer,&readBuffer[PKT_HEADER_LENGTH], min((int)*readSize, MAX_READ_PKT_SIZE-PKT_HEADER_LENGTH));
 
 	return STATUS_OK;
 }
@@ -358,7 +357,6 @@ int ClibIntecUsbDevice::GetDeviceVersion(char *buffer)
 			SetIntecLastError("CIntecUSBDeviceH::GetDeviceVersion:Failed to Read IntecCard version ");
 			return ERROR_FAIL;
 		}
-		std::cout << "intec FW version " << intec_ver.value << std::endl;
 		memcpy(buffer,(char *)&intec_ver.value, readSize_);
 		return STATUS_OK;
 	}
@@ -383,5 +381,5 @@ int ClibIntecUsbDevice::ClearReadBuffers()
 		}
 		return STATUS_OK;
 	}
-
+	return ERROR_FAIL;
 }

@@ -19,7 +19,6 @@ ClibIntecOperations::~ClibIntecOperations()
 
 void printbuffer(unsigned char* buffer, unsigned int size)
 {
-	std::cout << "buffer size = " << size << std::endl;
 	for (unsigned int i=0; i < size; i++)
 	{
 		std::cout << std::hex << (unsigned int) buffer[i];
@@ -84,12 +83,8 @@ int ClibIntecOperations::Initialize(int reset)
 			if (IntecGetCaseInputs(i, &currentCaseMask_[i]) != STATUS_OK)
 				return ERROR_FAIL;
 
-			std::cout << "current mask " << currentCaseMask_[i] << std::endl;
-
 			//char eventsFileName[256];
 			getcwd(workingDir_, sizeof(workingDir_));
-
-			printf("%s\n", workingDir_);
 			//snprintf(eventsFileName,256, "%s%s.xml", workingDir_, EVENTS_FILE_NAME);
 			IntecLoadandConfigureEvents(i,ConfigFileDir_, false);
 		}
@@ -122,7 +117,6 @@ int ClibIntecOperations::Initialize(int reset)
 		}
 	}
 
-	DBG("after reset section")
 	// build Intec Tests Error messages vectors
 //	if(buildIntecBenchSelfTestErrorMessages() != STATUS_OK)
 //		return ERROR_FAIL;

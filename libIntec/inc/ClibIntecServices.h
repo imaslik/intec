@@ -46,6 +46,7 @@ private:
 	libusb_context *m_libusb_ctx = NULL;
 	ssize_t m_libusb_devc=0;
 
+
 protected:
 	const int32_t InitializeUsbDevices();
 	const int32_t SearchUsbDevices();

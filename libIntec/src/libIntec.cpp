@@ -98,6 +98,7 @@ int libIntec_Exit(void)
 	return STATUS_OK;
 }
 
+
 int libtIntec_GetNumOfUsbDevices(int& number_devices_found)
 {
 	try

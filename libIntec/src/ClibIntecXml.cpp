@@ -204,7 +204,6 @@ bool ClibIntecXml::AddAttribute (const char* NodeName, const char* AttributeName
 {
 	if(read_)
 	{
-		printf ("Cannot AddAttribute as  file %s is loaded as read-only.",fileName_);
 		return false; //File cannot be modified as it is opened in read-only mode.
 	}
 	bool    result  = false;

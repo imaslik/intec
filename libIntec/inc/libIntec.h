@@ -207,4 +207,5 @@ int libintec_GetLastError(char *buffer, unsigned int buffersize);
 int libIntec_GetTemperatureSource(unsigned int index, IntecTemperatureSourceType, int *source_size, short* sources, unsigned int *timestamp, int* valid_mask);
 int libIntec_GetActualFeedbackType(unsigned int index, int cardId, IntecTemperatureSourceType* actualSrcType);
 
+
 #endif //INC_LIBINTEC_H_

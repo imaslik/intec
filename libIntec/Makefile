@@ -1,5 +1,6 @@
-CC=g++
-FLAGS=-Wall -g
+CCPP=g++
+CC=gcc
+FLAGS=-Wall
 LDLIBUSB=$(shell pkg-config --libs --cflags libusb-1.0)
 
 SRC=src
@@ -18,11 +19,11 @@ TARGET= $(LIB)/libIntec.so
 all: $(TARGET)
 
 $(TARGET): $(filter-out $(EXCLUDE),$(BINS))
-	$(CC) -fPIC $(FLAGS) $(LDLIBUSB) -shared $^ -o $@
+	$(CCPP) -fPIC $(FLAGS) $(LDLIBUSB) -shared $^ -o $@
 	cp $(INC)/libIntec.h $(LIB)/libIntec.h 
 
 $(BIN)/%.o: $(SRC)/%.cpp $(INC)/%.h
-	$(CC) -fPIC $(FLAGS) $(LDLIBUSB)-I$(INC) -c $(filter-out %.h, $^) -o $@ 
+	$(CCPP) -fPIC $(FLAGS) $(LDLIBUSB)-I$(INC) -c $(filter-out %.h, $^) -o $@ 
  
 
 test:

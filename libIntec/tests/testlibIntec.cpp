@@ -7,10 +7,13 @@
 
 #include "libIntec.h"
 #include <iostream>
+#include <unistd.h>
 #define test_main main
 
 int test_main(int argc, char ** argvv)
 {
+	argc--;
+	argvv++;
 	char ERROR_MSG[512];
 	std::cout << "libIntec API test" << std::endl;
 
@@ -56,8 +59,6 @@ int test_main(int argc, char ** argvv)
 		std::cout << "version " << version << std::endl;
 		std::cout << "TEST PASS - libIntec_GetDeviceVersion" << std::endl;
 	}
-	std::cout << std::endl << std::endl;
-
 	for (int index = 0; index < num_of_devices; index++)
 	{
 		if (libIntec_InitializeCard(index) != STATUS_OK)
@@ -74,33 +75,58 @@ int test_main(int argc, char ** argvv)
 			std::cout << "TEST PASS - libIntec_InitializeCard" << std::endl;
 		}
 
-
 		int CardId = 0;
-		float Temperature = 25;
+		float Temperature;
+		try
+		{
+			if (argc > 0)
+			 Temperature = atof(argvv[0]);
+			else
+				throw "ERROR";
 
+			if (Temperature > 100 || Temperature < 0)
+				throw "ERROR";
+		}
+		catch (...)
+		{
+			Temperature = 25;
+		}
+		float Error = 0.5;
+		float ReadTemp;
+		std::cout << "Setting temperature to " << Temperature << std::endl;
 		if (libIntec_SetTemperature(index, CardId, Temperature) != STATUS_OK)
 		{
 			std::cout << "TEST FAIL: libIntec_GetTemperature return error" << std::endl;
 			libIntec_Exit();
 			exit(1);
 		}
+		std::cout << "TEST PASS - libIntec_SetTemperature" << std::endl;
+
 		unsigned int TimeStamp = 0;
-		for (int j=0; j< 10; j++)
+		int stability_couter = 0;
+		do
 		{
-			if (libIntec_GetTemperature(index, CardId, &Temperature, &TimeStamp) != STATUS_OK)
+			if (libIntec_GetTemperature(index, CardId, &ReadTemp, &TimeStamp) != STATUS_OK)
 			{
 				std::cout << "TEST FAIL: libIntec_GetTemperature return error" << std::endl;
 				libIntec_Exit();
 				exit(1);
 			}
+
+			std::cout << "Temparture = " << ReadTemp << std::endl;
+			if ((ReadTemp > (Temperature + Error)) || (ReadTemp < (Temperature - Error)))
+			{
+				stability_couter = 0;
+			}
 			else
 			{
-				std::cout << "TEST PASS - libIntec_GetTemperature" << std::endl;
-				std::cout << "ReadTemparture = " << Temperature << std::endl;
-				std::cout << "Timestamp: " << TimeStamp << std::endl;
+				stability_couter++;
 			}
+			usleep(500000);
 		}
+		while (stability_couter < 4);
 	}
+	std::cout << "TEST PASS - libIntec_GetTemperature" << std::endl;
 
 	libIntec_Exit();
 	return 0;
