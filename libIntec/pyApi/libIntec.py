@@ -1,58 +1,117 @@
-
+#!/usr/bin/python3
 # @author Shady, Ganem <shady.ganem@intel.com>
 
 from ctypes import *
 import os
 import platform 
+from enum import Enum
 
 if platform.system() == "Linux":
-    pass
-__libIntec = cdll.LoadLibrary("libIntec.so")
-
-
+    __libIntec = cdll.LoadLibrary("libIntec.so")
 #elif platform.system() == "Windows":
 #    libIntec = ctypes.
 
-print(dir(__libIntec))
+
+
+class CtypesEnum(Enum):
+    """A ctypes-compatible IntEnum superclass."""
+    @classmethod
+    def from_param(cls, obj):
+        return int(obj)
+
+class IntecUsbDeviceType(CtypesEnum):
+    IntecH = 0
+    IntecD = 1
+    TAU = 2
+
+IntecUsbDeviceTypeToInt = { "IntecH" : 0,
+                            "IntecD" : 1,
+                            "TAU"    : 2}
+
+def Initialize(device="IntecH"):
+    __device = c_int(IntecUsbDeviceTypeToInt.get(device, 0))
+    __ret = c_int()
+    try:
+        __ret = __libIntec.__libIntec_Initialize(__device)
+    except Exception as e:
+        raise Exception("libIntec exception at Initialize")
+    if __ret != 0:
+        raise Exception("libIntec exception at Initialize")
+    return True
+
+def Exit():
+    __ret = c_int()
+    try:
+        __ret = __libIntec.__libIntec_Exit()
+    except Exception as e:
+        raise Exception("libIntec exception at Exit")
+    if __ret != 0:
+        raise Exception("libIntec exception at Exit")
+    return True
+
+def InitializeCard(index):
+    __index = c_int(index)
+    __ret = c_int()
+    try:
+        __ret = __libIntec.__libIntec_InitializeCard(__index)
+    except Exception as e:
+        raise Exception("libIntec exception at InitializeCard")
+    if __ret != 0:
+        raise Exception("libIntec exception at InitializeCard")
+    return True
+
+def GetTemperature(index, cardId):
+    __index = c_uint(index)
+    __cardId = c_int(cardId)
+    __temperature = c_float()
+    __timestamp = c_uint()
+    try:
+        __ret = __libIntec.__libIntec_GetTemperature(__index, __cardId, pointer(__temperature), pointer(__timestamp))
+    except Exception as e:
+        raise Exception("libIntec exception at GetTemperature")
+
+    if __ret != 0:
+        raise Exception("libIntec exception at GetTemperature")
+    return {"temperature": __temperature.value, "timestamp": __timestamp.value}
+
+def SetTemperature(index, cardId, temp):
+    __index = c_uint(index)
+    __cardId = c_int(cardId)
+    __temp = c_float(temp)
+
+    __ret = __libIntec.__libIntec_SetTemperature(__index, __cardId, __temp)
+    try:
+        pass
+        #__ret = __libIntec.__libIntec__SetTemperature(__index, __cardId, __temp)
+    except Exception as e:
+        raise Exception("libIntec exception at SetTemperature")  
+
+    if __ret != 0:
+        raise Exception("libIntec exception at SetTemperature")  
+    return True
 
 def GetlibVersion():
     __major = c_uint()
     __minor = c_uint()
     __ret = c_int()
-    #__libIntec.libIntec_GetlibVersion.argtypes = (
-    __ret = __libIntec.libIntec_GetlibVersion(byref(__major), byref(__minor))
+    __ret = __libIntec.__libIntec_GetlibVersion(byref(__major), byref(__minor))
     if __ret is not 0:
-        return 1
-    return (__major, __minor) 
+        raise Exception("libIntec exception at GetlibVersion")
+    return {"major":__major.value, "minor":__minor.value}
 
-def libIntec_Intialize(Device):
-    __libIntec.libIntec_Intialize.argtypes
+if __name__=="__main__":
+    import time
+    print(GetlibVersion())
+    Initialize()
+    InitializeCard(0)
+    set_temp = 60
+    SetTemperature(0, 0, set_temp)
+    temp = GetTemperature(0, 0)
 
-def libIntec_InitializeCard(inde):
-    pass
-
-
-
-#int libIntec_Initialize(IntecUsbDeviceType dev);
-#int libIntec_GetlibVersion(unsigned int &major, unsigned int &minor);
-#int libIntec_GetDeviceVersion(unsigned int index, char * Buffer);
-#int libIntec_GetDeviceSerialNumber(unsigned int index, IntecCardType type, int cardId, char *serial);
-#void SetIntecLastError(const char * err);
-#int libIntec_Exit(void);
-#int libIntec_InitializeOverNetwork(IntecUsbDeviceType dev, uint32_t numOfDevices, char **HostName);
-#int libtIntec_GetNumOfUsbDevices(int&);
-#int libIntec_ReadDeviceByAddr(unsigned int index, unsigned int addr, unsigned char *szBuffer, unsigned int *cbRead);
-#int libIntec_WriteDeviceByAddr(unsigned int index, unsigned int addr, unsigned char *szBuffer, unsigned int cbRead);
-#int libIntec_GetDeviceMode(int index, IntecDeviceOperationMode &mode);
-#int libIntec_SetDeviceMode(int index, IntecDeviceOperationMode mode);
-#int libIntec_GetDeviceName(int index, char* Buffer);
-#int libIntec_InitializeCard(unsigned int index);
-#int libIntec_InitializeCardNoReset(unsigned int index);
-#int libIntec_GetTemperature(unsigned int index, int cardId,float *temprature, unsigned int * timestamp);
-#int libIntec_SetTemperature(unsigned int index, int cardId, float Temp);
-#int libIntex_SetFeedBackControlParameter(unsigned int index, int cardId, IntecTemperatureCalcType calcMode, IntecTemperatureSourceType srcType, int mask);
-#int libIntec_SetCaseInput(unsigned int index, int cardId, bool enable, int mask);
-#int libintec_GetLastError(char *buffer, unsigned int buffersize);
-#int libIntec_GetTemperatureSource(unsigned int index, IntecTemperatureSourceType, int *source_size, short* sources, unsigned int *timestamp, int* valid_mask);
-#int libIntec_GetActualFeedbackType(unsigned int index, int cardId, IntecTemperatureSourceType* actualSrcType);
+    print(temp["temperature"])
+    while temp["temperature"] < set_temp - 0.5 or temp["temperature"]  > set_temp + 0.5:
+        temp = GetTemperature(0, 0)
+        print(temp["temperature"])
+        time.sleep(1)
+    Exit()
 

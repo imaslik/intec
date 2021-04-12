@@ -6,6 +6,7 @@
  */
 
 #include "libIntec.h"
+#include "c_libIntec.h"
 #include <mutex>
 #include "ClibIntecException.h"
 #include "ClibIntecServices.h"
