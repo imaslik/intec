@@ -20,6 +20,7 @@ all: $(TARGET)
 
 install: $(TARGET)
 	sudo cp -rf $(TARGET) /usr/lib64/libIntec.so
+	sudo cp $(LIB)/libIntec.h /usr/include/libIntec.h 
 	sudo mkdir -p /etc/libIntec
 	sudo cp -rf cfg/InTECEventsConfiguration.xml /etc/libIntec/.
 	sudo ldconfig
