@@ -5,11 +5,11 @@
  *      Author: Shady Ganem <shady.ganem@intel.com>
  */
 
-#include "libIntec.h"
-#include "c_libIntec.h"
 #include <mutex>
 #include "ClibIntecException.h"
 #include "ClibIntecServices.h"
+#include "libIntec.h"
+#include "c_libIntec.h"
 
 std::mutex IntecMutex;
 ClibIntecServices *libIntecServices = NULL;

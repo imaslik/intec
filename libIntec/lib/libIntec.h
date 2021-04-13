@@ -27,41 +27,41 @@
 #define ERROR_WRITE_FAIL     6
 #define ERRoR_READ_FAIL      7
 
-
+//libIntec Versions
 #define LIBINTEC_VERSION_STR "beta 0.1"
 #define LIBINTEC_VERSION_MAJOR 1
 #define LIBINTEC_VERSION_MINOR 0
 
-#define MAX_TEST_MSG_SIZE 512
-#define MSG_BUF_SIZE 512
+#define MAX_TEST_MSG_SIZE    512
+#define MSG_BUF_SIZE         512
 
 
-#define INTEC_SW_VERSION "REV 1.2.0"
-#define READ_BUF_SIZE 512
-#define WRITE_BUF_SIZE 512
+#define INTEC_SW_VERSION     "REV 1.2.0"
+#define READ_BUF_SIZE        512
+#define WRITE_BUF_SIZE       512
 
-#define MAX_DTS 16
-#define MAX_DIODE 4
-#define MAX_TCASE_ON_CARD 4
-#define MAX_PACKAGES 4
-#define DTS_NAME_LEN 32
+#define MAX_DTS              16
+#define MAX_DIODE            4
+#define MAX_TCASE_ON_CARD    4
+#define MAX_PACKAGES         4
+#define DTS_NAME_LEN         32
 
-#define MAX_DIODE_SOURCES 4
+#define MAX_DIODE_SOURCES    4
 #define MAX_PF_TEMPERATURE_SOURCES 4
-#define MAX_SOURCES_SIZE 16
+#define MAX_SOURCES_SIZE     16
 #define MAX_FEEDBACK_TEMPERATURE_SOURCES 4
 
 #define MAX_TEST_MSG_SIZE 512
 #define MSG_BUF_SIZE 512
 
-#define INTEC_BASE_ADDR 0x10000
-#define PECI_DEVICE_BASE_ADDR 0x20000
-#define INTECD0_DEVICE_BASE_ADDR 0x40000
-#define INTECD1_DEVICE_BASE_ADDR 0x80000
-#define INTECD2_DEVICE_BASE_ADDR 0x100000
-#define INTECD3_DEVICE_BASE_ADDR 0x200000
-#define TIC_DEVICE_BASE_ADDR 0x400000
-#define WATER_DEVICE_BASE_ADDR 0x800000
+#define INTEC_BASE_ADDR           0x10000
+#define PECI_DEVICE_BASE_ADDR     0x20000
+#define INTECD0_DEVICE_BASE_ADDR  0x40000
+#define INTECD1_DEVICE_BASE_ADDR  0x80000
+#define INTECD2_DEVICE_BASE_ADDR  0x100000
+#define INTECD3_DEVICE_BASE_ADDR  0x200000
+#define TIC_DEVICE_BASE_ADDR      0x400000
+#define WATER_DEVICE_BASE_ADDR    0x800000
 
 enum IntecUsbDeviceType
 {
@@ -119,6 +119,7 @@ enum EventType
 	WarningEvent,
 	NotificationEvent
 };
+
 typedef struct EventConfigurationParam
 {
 	char Name[64];
@@ -206,6 +207,5 @@ int libIntec_SetCaseInput(unsigned int index, int cardId, bool enable, int mask)
 int libintec_GetLastError(char *buffer, unsigned int buffersize);
 int libIntec_GetTemperatureSource(unsigned int index, IntecTemperatureSourceType, int *source_size, short* sources, unsigned int *timestamp, int* valid_mask);
 int libIntec_GetActualFeedbackType(unsigned int index, int cardId, IntecTemperatureSourceType* actualSrcType);
-
 
 #endif //INC_LIBINTEC_H_

@@ -2,7 +2,8 @@
 CC=g++
 FLAGS=-Wall -g 
 LDLIBUSB=$(shell pkg-config --libs --cflags libusb-1.0)
-LDLIBINTEC=-L../lib -lIntec -I../lib
+#LDLIBINTEC=-L../lib -lIntec -I../lib
+LDLIBINTEC=-lIntec -I../lib 
 EXPORT_CMD=:$(LD_LIBRARY_PATH):export LD_LIBRARY_PATH=$(shell pwd)/../lib
 
 all: libIntec.test
