@@ -18,11 +18,17 @@ TARGET= $(LIB)/libIntec.so
 
 all: $(TARGET)
 
+install: $(TARGET)
+	sudo cp -rf $(TARGET) /usr/lib64/libIntec.so
+	sudo mkdir -p /etc/libIntec
+	sudo cp -rf cfg/InTECEventsConfiguration.xml /etc/libIntec/.
+	sudo ldconfig
+
 $(TARGET): $(filter-out $(EXCLUDE),$(BINS))
-	$(CC) -fPIC $(FLAGS) $(LDLIBUSB) -shared $^ -o $@
+	$(CC) -fPIC $(FLAGS) $(LDLIBUSB) -shared -Wl,-soname,libIntec.so $^ -o $@
 	cp $(INC)/libIntec.h $(LIB)/libIntec.h 
 
-$(BIN)/%.o: $(SRC)/%.cpp $(INC)/%.h
+$(BIN)/%.o: $(SRC)/%.cpp $(INC)/%.h 
 	$(CCPP) -fPIC $(FLAGS) $(LDLIBUSB)-I$(INC) -c $(filter-out %.h, $^) -o $@ 
  
 

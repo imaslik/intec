@@ -7,6 +7,7 @@ import platform
 from enum import Enum
 
 if platform.system() == "Linux":
+    os.environ["LD_LIBRARY_PATH"] = f"$LD_LIBRARY_PATH:{os.environ['PWD']}"
     __libIntec = cdll.LoadLibrary("libIntec.so")
 #elif platform.system() == "Windows":
 #    libIntec = ctypes.
@@ -104,10 +105,9 @@ if __name__=="__main__":
     print(GetlibVersion())
     Initialize()
     InitializeCard(0)
-    set_temp = 60
+    set_temp = 25 
     SetTemperature(0, 0, set_temp)
     temp = GetTemperature(0, 0)
-
     print(temp["temperature"])
     while temp["temperature"] < set_temp - 0.5 or temp["temperature"]  > set_temp + 0.5:
         temp = GetTemperature(0, 0)
