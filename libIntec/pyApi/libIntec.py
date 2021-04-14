@@ -69,13 +69,10 @@ def SetTemperature(index, cardId, temp):
     __cardId = c_int(cardId)
     __temp = c_float(temp)
 
-    __ret = __libIntec.__libIntec_SetTemperature(__index, __cardId, __temp)
     try:
-        pass
-        #__ret = __libIntec.__libIntec__SetTemperature(__index, __cardId, __temp)
+        __ret = __libIntec.__libIntec_SetTemperature(__index, __cardId, __temp)
     except Exception as e:
         raise Exception("libIntec exception at SetTemperature")  
-
     if __ret != 0:
         raise Exception("libIntec exception at SetTemperature")  
     return True
