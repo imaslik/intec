@@ -2147,6 +2147,72 @@ const int ClibIntecOperations::IntecSetTemperature(int cardId, float temprature)
 	return IntecSetTemperature(cardId, convertRealToIntecTemperature(temprature));
 }
 
+const int ClibIntecOperations::IntecGetDeviceSerialNumber(IntecCardType card_type, int card_id, char *serial)
+{
+	switch(card_type)
+	{
+		case IntecCard:
+			UN_INTEC_SERIAL intec_serial;
+			readSize_= sizeof(UN_INTEC_SERIAL);
+			if(libIntec_ReadDeviceByAddr(deviceIndex_,INTEC_BASE_ADDR|OFFSET_UNIT_GENERAL|OFFSET_INTEC_SERIAL, intec_serial.value,&readSize_) != STATUS_OK)
+			{
+				SetIntecLastError("IntecGetDeviceSerialNumber() :Failed to Read OFFSET_INTEC_SERIAL ");
+				return ERROR_FAIL;
+			}
+			memcpy(serial,intec_serial.value,SERIAL_NUMBER_MAX_LEN);
+			serial[SERIAL_NUMBER_MAX_LEN]=0;
+			return STATUS_OK;
+			break;
+		case IntecDCard:
+			if (IsCardExist(card_id))
+			{
+				UN_D_SERIAL intecd_serial;
+				readSize_= sizeof(UN_D_SERIAL);
+				if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< card_id)|OFFSET_UNIT_D_GENERAL|OFFSET_D_SERIAL,intecd_serial.value,&readSize_) != STATUS_OK)
+				{
+					SetIntecLastError("IntecGetDeviceSerialNumber() :Failed to Read OFFSET_INTEC_SERIAL ");
+					return ERROR_FAIL;
+				}
+				memcpy(serial,intecd_serial.value,D_SERIAL_NUMBER_MAX_LEN);
+				serial[D_SERIAL_NUMBER_MAX_LEN]=0;
+				return STATUS_OK;
+			}
+			else
+			{
+				SetIntecLastError("IntecGetDeviceSerialNumber() :IntecDCard Not Exist ");
+				return ERROR_FAIL;
+			}
+			break;
+		case PeciCard:
+			//if(!PECIModuleExist_)
+			//{
+			//	SetIntecLastError("IntecGetDeviceSerialNumber() :PeciCard Not Exist ");
+			//	return false;
+			//}
+
+			//UN_P_SERIAL peci_serial;
+			//readSize_=sizeof(UN_P_SERIAL);
+			//if(ReadDeviceByAddr(deviceIndex_,PECI_DEVICE_BASE_ADDR |OFFSET_UNIT_P_GENERAL|OFFSET_P_SERIAL,peci_serial.value,&readSize_)!=S_OK)
+			//{
+			//	SetIntecLastError("IntecGetDeviceName() :Failed to Read PeciCard name ");
+			//	return false;
+			//}
+			//memcpy(serial,(UCHAR *)&peci_serial.value,PECI_MODULE_DEV_NAME_LEN);
+			//serial[PECI_MODULE_DEV_NAME_LEN]=0;
+			return ERROR_FAIL;
+			break;
+		case TicCard:
+			break;
+		case WaterModule:
+			return ERROR_FAIL;
+			break;
+		default:
+			return ERROR_FAIL;
+			break;
+	}
+	return ERROR_FAIL;
+}
+
 const int ClibIntecOperations::IntecSetAllEventDisableEnable(int cardId, EventType evType)
 {
 	switch(evType)

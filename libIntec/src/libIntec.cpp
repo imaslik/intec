@@ -350,8 +350,10 @@ int libIntec_GetDeviceSerialNumber(unsigned int index, IntecCardType type, int c
 	try
 	{
 		IntecMutex.lock();
+		int ret = libIntecServices->m_Operations[index]->IntecGetDeviceSerialNumber(type, cardId, serial);
 		IntecMutex.unlock();
-		return ERROR_FAIL;
+		if (ret != STATUS_OK)
+			throw ClibIntecException("ERROR at GetDeviceNumber has failed");
 		return STATUS_OK;
 	}
 	catch (std::exception& e)
