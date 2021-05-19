@@ -9,8 +9,8 @@ import platform
 from enum import Enum
 
 if platform.system() == "Linux":
-    os.environ["LD_LIBRARY_PATH"] = f"$LD_LIBRARY_PATH:{os.environ['PWD']}"
     __libIntec = cdll.LoadLibrary("libIntec.so")
+    #os.environ["LD_LIBRARY_PATH"] = f"$LD_LIBRARY_PATH:{os.environ['PWD']}"
 #elif platform.system() == "Windows":
 #    libIntec = ctypes.
 

@@ -13,6 +13,7 @@ HDRS=$(wildcard $(INC)/*.h)
 ADD_HDRS=$(INC)/libIntec_InTEC_DeDefs.h $(INC)/
 BINS=$(patsubst $(SRC)/%.cpp, $(BIN)/%.o, $(SRCS))
 EXCLUDE=
+PYAPI=pyApi/libIntec.py
 
 TARGET= $(LIB)/libIntec.so
 
@@ -23,6 +24,7 @@ install: $(TARGET)
 	sudo cp $(LIB)/libIntec.h /usr/include/libIntec.h 
 	sudo mkdir -p /etc/libIntec
 	sudo cp -rf cfg/InTECEventsConfiguration.xml /etc/libIntec/.
+	sudo cp -rf $(PYAPI) /usr/lib/python3.7/site-packages/libIntec.py
 	sudo ldconfig
 
 $(TARGET): $(filter-out $(EXCLUDE),$(BINS))
