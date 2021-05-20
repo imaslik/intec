@@ -25,7 +25,6 @@ install: $(TARGET)
 	sudo mkdir -p /etc/libIntec
 	sudo cp -rf cfg/InTECEventsConfiguration.xml /etc/libIntec/.
 	sudo cp -rf $(PYAPI) /usr/lib/python3.7/site-packages/libIntec.py
-	sudo ldconfig
 
 $(TARGET): $(filter-out $(EXCLUDE),$(BINS))
 	$(CC) -fPIC $(FLAGS) $(LDLIBUSB) -shared -Wl,-soname,libIntec.so $^ -o $@

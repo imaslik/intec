@@ -9,10 +9,8 @@ import platform
 from enum import Enum
 
 if platform.system() == "Linux":
-    __libIntec = cdll.LoadLibrary("libIntec.so")
     #os.environ["LD_LIBRARY_PATH"] = f"$LD_LIBRARY_PATH:{os.environ['PWD']}"
-#elif platform.system() == "Windows":
-#    libIntec = ctypes.
+    __libIntec = cdll.LoadLibrary("libIntec.so")
 
 IntecUsbDeviceTypeToInt = { "IntecH" : 0,
                             "IntecD" : 1,
@@ -62,6 +60,20 @@ def GetTemperature(index, cardId):
 
     if __ret != 0:
         raise Exception("libIntec exception at GetTemperature")
+    return __temperature.value
+
+def GetTemperatureWithTimestamp(index, cardId):
+    __index = c_uint(index)
+    __cardId = c_int(cardId)
+    __temperature = c_float()
+    __timestamp = c_uint()
+    try:
+        __ret = __libIntec.__libIntec_GetTemperature(__index, __cardId, pointer(__temperature), pointer(__timestamp))
+    except Exception as e:
+        raise Exception("libIntec exception at GetTemperature")
+
+    if __ret != 0:
+        raise Exception("libIntec exception at GetTemperature")
     return {"temperature": __temperature.value, "timestamp": __timestamp.value}
 
 def SetTemperature(index, cardId, temp):
@@ -69,10 +81,13 @@ def SetTemperature(index, cardId, temp):
     __cardId = c_int(cardId)
     __temp = c_float(temp)
 
+    __ret = __libIntec.__libIntec_SetTemperature(__index, __cardId, __temp)
     try:
-        __ret = __libIntec.__libIntec_SetTemperature(__index, __cardId, __temp)
+        pass
+        #__ret = __libIntec.__libIntec__SetTemperature(__index, __cardId, __temp)
     except Exception as e:
         raise Exception("libIntec exception at SetTemperature")  
+
     if __ret != 0:
         raise Exception("libIntec exception at SetTemperature")  
     return True
