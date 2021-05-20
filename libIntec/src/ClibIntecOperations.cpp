@@ -10,6 +10,7 @@
 ClibIntecOperations::ClibIntecOperations(unsigned int DevIndex)
 {
 	m_device_index = DevIndex;
+	deviceIndex_ = (int)DevIndex;
 	m_initialization_flag = false;
 }
 
@@ -44,6 +45,7 @@ int ClibIntecOperations::Initialize(int reset)
 	{
 		return ERROR_FAIL;
 	}
+
 	TDAUDetected_ = diode_status.fields.TDAUDetected;
 	//update the InTECDCards_ , PECIModuleExist_
 	if(IntecGetSysCardsConfiguration() != STATUS_OK)
@@ -51,6 +53,7 @@ int ClibIntecOperations::Initialize(int reset)
 
 	if(reset)
 	{
+
 		// update the currentDiodeMask_
 		currentDiodeMask_ = 0;
 		if(IntecSetDiodeInputs(true, currentDiodeMask_) != STATUS_OK)
@@ -149,11 +152,12 @@ const int ClibIntecOperations::IntecGetSysCardsConfiguration()
 	PECIModuleExist_ = false;
 	readSize_ = sizeof(UN_CONNECTED_DEVICES);
 
-	if(libIntec_ReadDeviceByAddr(deviceIndex_, INTEC_BASE_ADDR|OFFSET_UNIT_GENERAL|OFFSET_CONNECTED_DEVICES, (unsigned char *)&connectedDevices.value, &readSize_) != STATUS_OK)
+	if(libIntec_ReadDeviceByAddr(m_device_index, INTEC_BASE_ADDR|OFFSET_UNIT_GENERAL|OFFSET_CONNECTED_DEVICES, (unsigned char *)&connectedDevices.value, &readSize_) != STATUS_OK)
 	{
 		SetIntecLastError("IntecGetSysCardsConfiguration:: Failed to Read OFFSET_CONNECTED_DEVICES");
 		return ERROR_FAIL;
 	}
+
 	if(connectedDevices.fields.PECIModule)
 		PECIModuleExist_ = true;
 	if(connectedDevices.fields.InTECD0)
@@ -179,7 +183,7 @@ const int ClibIntecOperations::IntecSetDiodeInputs(bool enable, unsigned int mas
 	writeSize_=sizeof(UN_DIODE_CFG);
 	diode_cfg.fields.PollDiodes=currentDiodeMask_;
 
-	if(libIntec_WriteDeviceByAddr(deviceIndex_,INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_DIODE_CFG,(UCHAR *)&diode_cfg.value,writeSize_))
+	if(libIntec_WriteDeviceByAddr(m_device_index,INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_DIODE_CFG,(UCHAR *)&diode_cfg.value,writeSize_))
 	{
 		return ERROR_FAIL;
 	}
@@ -197,7 +201,7 @@ const int ClibIntecOperations::IntecSetPFInputs(bool enable, unsigned int mask)
 	UN_PF_CFG pf_cfg;
 	writeSize_= sizeof(UN_PF_CFG);
 	pf_cfg.fields.PollPF = currentPFMask_;
-	if(libIntec_WriteDeviceByAddr(deviceIndex_,INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_PF_CFG, (unsigned char *)&pf_cfg.value, writeSize_))
+	if(libIntec_WriteDeviceByAddr(m_device_index,INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_PF_CFG, (unsigned char *)&pf_cfg.value, writeSize_))
 	{
 		SetIntecLastError("IntecSetPFInputs: Failed to Write  OFFSET_PF_CFG");
 		return ERROR_FAIL;
@@ -217,7 +221,7 @@ const int ClibIntecOperations::IntecSetProcHotInputs(bool enable, unsigned int m
 		currentProcHOTMask_ &=((~mask)&0xf);
 	UN_PROCHOT_CFG prochot_cfg;
 	readSize_=sizeof(UN_PROCHOT_CFG);
-	if(libIntec_ReadDeviceByAddr(deviceIndex_, INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_PROCHOT_CFG,(unsigned char *) &prochot_cfg.value, &readSize_) != STATUS_OK)
+	if(libIntec_ReadDeviceByAddr(m_device_index, INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_PROCHOT_CFG,(unsigned char *) &prochot_cfg.value, &readSize_) != STATUS_OK)
 	{
 		SetIntecLastError("IntecSetProcHotInputs::Failed to Read OFFSET_PROCHOT_CFG");
 		return ERROR_FAIL;
@@ -227,7 +231,7 @@ const int ClibIntecOperations::IntecSetProcHotInputs(bool enable, unsigned int m
 
 	writeSize_=sizeof(UN_PROCHOT_CFG);;
 
-	if(libIntec_WriteDeviceByAddr(deviceIndex_,INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_PROCHOT_CFG,(unsigned char *)&prochot_cfg.value, writeSize_))
+	if(libIntec_WriteDeviceByAddr(m_device_index,INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_PROCHOT_CFG,(unsigned char *)&prochot_cfg.value, writeSize_))
 	{
 		SetIntecLastError("IntecSetProcHotInputs: Failed to Write  OFFSET_PROCHOT_CFG");
 		return ERROR_FAIL;
@@ -247,7 +251,7 @@ const int ClibIntecOperations::IntecClearProcHotEventsCounter(int input_num)
 
 	UN_PROCHOT_CFG prochot_cfg;
 	readSize_=sizeof(UN_PROCHOT_CFG);
-	if (libIntec_ReadDeviceByAddr(deviceIndex_,INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_PROCHOT_CFG,(unsigned char *)&prochot_cfg.value, &readSize_) != STATUS_OK)
+	if (libIntec_ReadDeviceByAddr(m_device_index,INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_PROCHOT_CFG,(unsigned char *)&prochot_cfg.value, &readSize_) != STATUS_OK)
 	{
 		SetIntecLastError("IntecClearProcHotEventsCounter:: Failed to Read OFFSET_PROCHOT_CFG");
 		return ERROR_FAIL;
@@ -257,7 +261,7 @@ const int ClibIntecOperations::IntecClearProcHotEventsCounter(int input_num)
 
 	writeSize_=sizeof(UN_PROCHOT_CFG);
 
-	if (libIntec_WriteDeviceByAddr(deviceIndex_, INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_PROCHOT_CFG,(unsigned char *)&prochot_cfg.value, writeSize_))
+	if (libIntec_WriteDeviceByAddr(m_device_index, INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_PROCHOT_CFG,(unsigned char *)&prochot_cfg.value, writeSize_))
 	{
 		SetIntecLastError("IntecClearProcHotEventsCounter: Failed to Write  OFFSET_PROCHOT_CFG");
 		return ERROR_FAIL;
@@ -281,7 +285,7 @@ const int ClibIntecOperations::IntecSetPeciInputs(bool enable, unsigned int mask
 	UN_P_PECI_CFG peci_cfg;
 	writeSize_= sizeof(UN_P_PECI_CFG);
 	peci_cfg.fields.PollDts = currentPeciMask_;
-	if (libIntec_WriteDeviceByAddr(deviceIndex_, PECI_DEVICE_BASE_ADDR |OFFSET_UNIT_P_DTS_CFG|OFFSET_P_PECI_CFG, (unsigned char *)&peci_cfg.value, writeSize_))
+	if (libIntec_WriteDeviceByAddr(m_device_index, PECI_DEVICE_BASE_ADDR |OFFSET_UNIT_P_DTS_CFG|OFFSET_P_PECI_CFG, (unsigned char *)&peci_cfg.value, writeSize_))
 	{
 		SetIntecLastError("IntecSetPeciInputs:: Failed to Write  OFFSET_P_PECI_CFG");
 		return ERROR_FAIL;
@@ -297,7 +301,7 @@ const int ClibIntecOperations::IntecClearPeciSensorsConfiguration()
 		writeSize_= sizeof(UN_P_CFG_DTS0);
 		for(int channel=0; channel< MAX_DTS; channel++)
 		{
-			if(libIntec_WriteDeviceByAddr(deviceIndex_,PECI_DEVICE_BASE_ADDR |OFFSET_UNIT_P_DTS_CFG|(OFFSET_P_CFG_DTS0+channel),(UCHAR *)&dts_cfg_reg.value,writeSize_))
+			if(libIntec_WriteDeviceByAddr(m_device_index,PECI_DEVICE_BASE_ADDR |OFFSET_UNIT_P_DTS_CFG|(OFFSET_P_CFG_DTS0+channel),(UCHAR *)&dts_cfg_reg.value,writeSize_))
 			{
 				SetIntecLastError("IntecClearPeciSensorsConfiguration:: Failed to Write  OFFSET_P_CFG_DTS0 +channel");
 				return ERROR_FAIL;
@@ -308,7 +312,7 @@ const int ClibIntecOperations::IntecClearPeciSensorsConfiguration()
 		dts_update_reg.value=0;
 		dts_update_reg.fields.UpdateDtsCfg=1;
 		writeSize_=sizeof(UN_P_CFG_DTS_UPDATE);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,PECI_DEVICE_BASE_ADDR |OFFSET_UNIT_P_DTS_CFG|OFFSET_P_CFG_DTS_UPDATE,(UCHAR *)&dts_update_reg.value,writeSize_))
+		if(libIntec_WriteDeviceByAddr(m_device_index,PECI_DEVICE_BASE_ADDR |OFFSET_UNIT_P_DTS_CFG|OFFSET_P_CFG_DTS_UPDATE,(UCHAR *)&dts_update_reg.value,writeSize_))
 		{
 			SetIntecLastError("IntecClearPeciSensorsConfiguration:: Failed to Write  OFFSET_P_CFG_DTS_UPDATE ");
 			return ERROR_FAIL;
@@ -328,14 +332,14 @@ const int ClibIntecOperations::IntecSetCaseInputs(int cardId,bool enable, unsign
 		UN_D_CASE_CFG case_cfg;
 		writeSize_=readSize_=sizeof(UN_D_CASE_CFG);
 
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)|OFFSET_UNIT_D_CASE|OFFSET_D_CASE_CFG,(UCHAR *)&case_cfg.value,&readSize_))
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)|OFFSET_UNIT_D_CASE|OFFSET_D_CASE_CFG,(UCHAR *)&case_cfg.value,&readSize_))
 		{
 			SetIntecLastError("IntecSetCaseInputs:: Failed to Read  OFFSET_D_CASE_CFG");
 			return ERROR_FAIL;
 		}
 
 		case_cfg.fields.PollTcase=currentCaseMask_[cardId];
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)|OFFSET_UNIT_D_CASE|OFFSET_D_CASE_CFG,(UCHAR *)&case_cfg.value,writeSize_))
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)|OFFSET_UNIT_D_CASE|OFFSET_D_CASE_CFG,(UCHAR *)&case_cfg.value,writeSize_))
 		{
 			SetIntecLastError("Failed to Write  OFFSET_D_CASE_CFG");
 			return ERROR_FAIL;
@@ -372,7 +376,7 @@ const int ClibIntecOperations::IntecGetCaseInputs(int cardId,unsigned int *mask)
 		case_cfg.value = 0;
 		readSize_ = sizeof(UN_D_CASE_CFG);
 
-		if(libIntec_ReadDeviceByAddr(deviceIndex_, (INTECD0_DEVICE_BASE_ADDR<< cardId)|OFFSET_UNIT_D_CASE|OFFSET_D_CASE_CFG, (UCHAR *)&case_cfg.value, &readSize_) != STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index, (INTECD0_DEVICE_BASE_ADDR<< cardId)|OFFSET_UNIT_D_CASE|OFFSET_D_CASE_CFG, (UCHAR *)&case_cfg.value, &readSize_) != STATUS_OK)
 		{
 			SetIntecLastError("IntecGetCaseInputs:: Failed to Read  OFFSET_D_CASE_CFG");
 			return ERROR_FAIL;
@@ -803,20 +807,20 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_COOLANT coolant_reg;
 		readSize_=sizeof(UN_D_COOLANT);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_COOLANT,(UCHAR *)&coolant_reg.value,&readSize_)!= STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_COOLANT,(UCHAR *)&coolant_reg.value,&readSize_)!= STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_COOLANT register ");
 			return false;
 		}
 		coolant_reg.fields.WpsTreshold=eventParam.value;
 		writeSize_=sizeof(UN_D_COOLANT);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_COOLANT,(UCHAR *)&coolant_reg.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_COOLANT,(UCHAR *)&coolant_reg.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to write OFFSET_D_COOLANT register ");
 			return false;
 		}
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_COOLANT,(UCHAR *)&coolant_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_COOLANT,(UCHAR *)&coolant_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_COOLANT register ");
 			return false;
@@ -833,20 +837,20 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_COOLANT coolant_reg;
 		readSize_=sizeof(UN_D_COOLANT);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_COOLANT,(UCHAR *)&coolant_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_COOLANT,(UCHAR *)&coolant_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_COOLANT register ");
 			return false;
 		}
 		coolant_reg.fields.GpmTreshold=eventParam.value;
 		writeSize_=sizeof(UN_D_COOLANT);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_COOLANT,(UCHAR *)&coolant_reg.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_COOLANT,(UCHAR *)&coolant_reg.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to write OFFSET_D_COOLANT register ");
 			return false;
 		}
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_COOLANT,(UCHAR *)&coolant_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_COOLANT,(UCHAR *)&coolant_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_COOLANT register ");
 			return false;
@@ -863,21 +867,21 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_PURGE purge_reg;
 		readSize_=sizeof(UN_D_PURGE);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_PURGE,(UCHAR *)&purge_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_PURGE,(UCHAR *)&purge_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_PURGE register ");
 			return false;
 		}
 		purge_reg.fields.PptTreshold=eventParam.value;
 		writeSize_=sizeof(UN_D_PURGE);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_PURGE,(UCHAR *)&purge_reg.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_PURGE,(UCHAR *)&purge_reg.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to write OFFSET_D_PURGE register ");
 			return false;
 		}
 
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_PURGE,(UCHAR *)&purge_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_PURGE,(UCHAR *)&purge_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_PURGE register ");
 			return false;
@@ -894,21 +898,21 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_FEEDBACK_LIMITS feedback_limits_reg;
 		readSize_=sizeof(UN_D_FEEDBACK_LIMITS);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
 		}
 		feedback_limits_reg.fields.OverrunErrMargin=eventParam.value;
 		writeSize_=sizeof(UN_D_FEEDBACK_LIMITS);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to write OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
 		}
 
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
@@ -925,20 +929,20 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_FEEDBACK_LIMITS feedback_limits_reg;
 		readSize_=sizeof(UN_D_FEEDBACK_LIMITS);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
 		}
 		feedback_limits_reg.fields.OverrunErrSlope=eventParam.value;
 		writeSize_=sizeof(UN_D_FEEDBACK_LIMITS);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to write OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
 		}
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
@@ -956,21 +960,21 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_FEEDBACK_LIMITS feedback_limits_reg;
 		readSize_=sizeof(UN_D_FEEDBACK_LIMITS);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
 		}
 		feedback_limits_reg.fields.OverrunErrTime=eventParam.value;
 		writeSize_=sizeof(UN_D_FEEDBACK_LIMITS);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to write OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
 		}
 
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
@@ -988,21 +992,21 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_FEEDBACK_LIMITS feedback_limits_reg;
 		readSize_=sizeof(UN_D_FEEDBACK_LIMITS);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
 		}
 		feedback_limits_reg.fields.SpTime=eventParam.value;
 		writeSize_=sizeof(UN_D_FEEDBACK_LIMITS);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to write OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
 		}
 
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
@@ -1019,21 +1023,21 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_FEEDBACK_LIMITS feedback_limits_reg;
 		readSize_=sizeof(UN_D_FEEDBACK_LIMITS);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
 		}
 		feedback_limits_reg.fields.SpMargin=eventParam.value;
 		writeSize_=sizeof(UN_D_FEEDBACK_LIMITS);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to write OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
 		}
 
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
@@ -1051,21 +1055,21 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_FEEDBACK_LIMITS feedback_limits_reg;
 		readSize_=sizeof(UN_D_FEEDBACK_LIMITS);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
 		}
 		feedback_limits_reg.fields.MaxT=eventParam.value;
 		writeSize_=sizeof(UN_D_FEEDBACK_LIMITS);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to write OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
 		}
 
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
@@ -1082,20 +1086,20 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_FEEDBACK_LIMITS feedback_limits_reg;
 		readSize_=sizeof(UN_D_FEEDBACK_LIMITS);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
 		}
 		feedback_limits_reg.fields.MaxTime=eventParam.value;
 		writeSize_=sizeof(UN_D_FEEDBACK_LIMITS);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to write OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
 		}
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
@@ -1113,20 +1117,20 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_FEEDBACK_LIMITS feedback_limits_reg;
 		readSize_=sizeof(UN_D_FEEDBACK_LIMITS);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
 		}
 		feedback_limits_reg.fields.MinT=eventParam.value;
 		writeSize_=sizeof(UN_D_FEEDBACK_LIMITS);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to write OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
 		}
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
@@ -1143,20 +1147,20 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_FEEDBACK_LIMITS feedback_limits_reg;
 		readSize_=sizeof(UN_D_FEEDBACK_LIMITS);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
 		}
 		feedback_limits_reg.fields.MinTime=eventParam.value;
 		writeSize_=sizeof(UN_D_FEEDBACK_LIMITS);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to write OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
 		}
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
@@ -1173,21 +1177,21 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_TH_POSITION th_position_reg;
 		readSize_=sizeof(UN_D_TH_POSITION);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_THERMAL_HEAD |OFFSET_D_TH_POSITION,(UCHAR *)&th_position_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_THERMAL_HEAD |OFFSET_D_TH_POSITION,(UCHAR *)&th_position_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_TH_POSITION register ");
 			return false;
 		}
 		th_position_reg.fields.TtpSetpoint=eventParam.value;
 		writeSize_=sizeof(UN_D_TH_POSITION);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_THERMAL_HEAD |OFFSET_D_TH_POSITION,(UCHAR *)&th_position_reg.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_THERMAL_HEAD |OFFSET_D_TH_POSITION,(UCHAR *)&th_position_reg.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to write OFFSET_D_TH_POSITION register ");
 			return false;
 		}
 
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_THERMAL_HEAD |OFFSET_D_TH_POSITION,(UCHAR *)&th_position_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_THERMAL_HEAD |OFFSET_D_TH_POSITION,(UCHAR *)&th_position_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_TH_POSITION register ");
 			return false;
@@ -1205,20 +1209,20 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_TH_POSITION th_position_reg;
 		readSize_=sizeof(UN_D_TH_POSITION);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_THERMAL_HEAD |OFFSET_D_TH_POSITION,(unsigned char *)&th_position_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_THERMAL_HEAD |OFFSET_D_TH_POSITION,(unsigned char *)&th_position_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_TH_POSITION register ");
 			return false;
 		}
 		th_position_reg.fields.TtpTimeout=eventParam.value;
 		writeSize_=sizeof(UN_D_TH_POSITION);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_THERMAL_HEAD |OFFSET_D_TH_POSITION,(UCHAR *)&th_position_reg.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_THERMAL_HEAD |OFFSET_D_TH_POSITION,(UCHAR *)&th_position_reg.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to write OFFSET_D_TH_POSITION register ");
 			return false;
 		}
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_THERMAL_HEAD |OFFSET_D_TH_POSITION,(UCHAR *)&th_position_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_THERMAL_HEAD |OFFSET_D_TH_POSITION,(UCHAR *)&th_position_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_TH_POSITION register ");
 			return false;
@@ -1236,21 +1240,21 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_FEEDBACK_DELTA_CFG feedback_delta_reg;
 		readSize_=sizeof(UN_D_FEEDBACK_DELTA_CFG);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_DELTA_CFG,(UCHAR *)&feedback_delta_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_DELTA_CFG,(UCHAR *)&feedback_delta_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_FEEDBACK_DELTA_CFG register ");
 			return false;
 		}
 		feedback_delta_reg.fields.DeltaTemp=eventParam.value;
 		writeSize_=sizeof(UN_D_FEEDBACK_DELTA_CFG);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_DELTA_CFG,(UCHAR *)&feedback_delta_reg.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_DELTA_CFG,(UCHAR *)&feedback_delta_reg.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to write OFFSET_D_FEEDBACK_DELTA_CFG register ");
 			return false;
 		}
 
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_DELTA_CFG,(UCHAR *)&feedback_delta_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_DELTA_CFG,(UCHAR *)&feedback_delta_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_FEEDBACK_DELTA_CFG register ");
 			return false;
@@ -1268,21 +1272,21 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_FEEDBACK_DELTA_CFG feedback_delta_reg;
 		readSize_=sizeof(UN_D_FEEDBACK_DELTA_CFG);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_DELTA_CFG,(UCHAR *)&feedback_delta_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_DELTA_CFG,(UCHAR *)&feedback_delta_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_FEEDBACK_DELTA_CFG register ");
 			return false;
 		}
 		feedback_delta_reg.fields.DeltaTempTime=eventParam.value;
 		writeSize_=sizeof(UN_D_FEEDBACK_DELTA_CFG);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_DELTA_CFG,(UCHAR *)&feedback_delta_reg.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_DELTA_CFG,(UCHAR *)&feedback_delta_reg.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to write OFFSET_D_FEEDBACK_DELTA_CFG register ");
 			return false;
 		}
 
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_DELTA_CFG,(UCHAR *)&feedback_delta_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_DELTA_CFG,(UCHAR *)&feedback_delta_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_FEEDBACK_DELTA_CFG register ");
 			return false;
@@ -1300,20 +1304,20 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_FEEDBACK_LIMITS feedback_limits_reg;
 		readSize_=sizeof(UN_D_FEEDBACK_LIMITS);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
 		}
 		feedback_limits_reg.fields.OverrunWarnMargin=eventParam.value;
 		writeSize_=sizeof(UN_D_FEEDBACK_LIMITS);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to write OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
 		}
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
@@ -1331,20 +1335,20 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_FEEDBACK_LIMITS feedback_limits_reg;
 		readSize_=sizeof(UN_D_FEEDBACK_LIMITS);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
 		}
 		feedback_limits_reg.fields.OverrunWarnSlope=eventParam.value;
 		writeSize_=sizeof(UN_D_FEEDBACK_LIMITS);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to write OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
 		}
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
@@ -1362,20 +1366,20 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_FEEDBACK_LIMITS feedback_limits_reg;
 		readSize_=sizeof(UN_D_FEEDBACK_LIMITS);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
 		}
 		feedback_limits_reg.fields.OverrunWarnTime=eventParam.value;
 		writeSize_=sizeof(UN_D_FEEDBACK_LIMITS);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to write OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
 		}
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_CONTROL |OFFSET_D_FEEDBACK_LIMITS,(UCHAR *)&feedback_limits_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_FEEDBACK_LIMITS register ");
 			return false;
@@ -1393,20 +1397,20 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_PURGE purge_reg;
 		readSize_=sizeof(UN_D_PURGE);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_PURGE,(UCHAR *)&purge_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_PURGE,(UCHAR *)&purge_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_PURGE register ");
 			return false;
 		}
 		purge_reg.fields.PurgeOffTemp=eventParam.value;
 		writeSize_=sizeof(UN_D_PURGE);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_PURGE,(UCHAR *)&purge_reg.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_PURGE,(UCHAR *)&purge_reg.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to write OFFSET_D_PURGE register ");
 			return false;
 		}
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_PURGE,(UCHAR *)&purge_reg.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_PURGE,(UCHAR *)&purge_reg.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecSetEventParam() :Failed to Read OFFSET_D_PURGE register ");
 			return false;
@@ -1425,20 +1429,20 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_LEAK_BOARD_LIMITS leak_board_limits;
 		readSize_=sizeof(UN_D_LEAK_BOARD_LIMITS);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_LEAK_BOARD_LIMITS,(UCHAR *)&leak_board_limits.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_LEAK_BOARD_LIMITS,(UCHAR *)&leak_board_limits.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecGetEventParam() :Failed to Read OFFSET_D_LEAK_BOARD_LIMITS register ");
 			return false;
 		}
 		leak_board_limits.fields.CondensationLimit=eventParam.value;
 		writeSize_=sizeof(UN_D_LEAK_BOARD_LIMITS);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_LEAK_BOARD_LIMITS,(UCHAR *)&leak_board_limits.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_LEAK_BOARD_LIMITS,(UCHAR *)&leak_board_limits.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecGetEventParam() :Failed to Write OFFSET_D_LEAK_BOARD_LIMITS register ");
 			return false;
 		}
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_LEAK_BOARD_LIMITS,(UCHAR *)&leak_board_limits.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_LEAK_BOARD_LIMITS,(UCHAR *)&leak_board_limits.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecGetEventParam() :Failed to Read (verifY) OFFSET_D_LEAK_BOARD_LIMITS register ");
 			return false;
@@ -1456,20 +1460,20 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_LEAK_BOARD_LIMITS leak_board_limits;
 		readSize_=sizeof(UN_D_LEAK_BOARD_LIMITS);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_LEAK_BOARD_LIMITS,(UCHAR *)&leak_board_limits.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_LEAK_BOARD_LIMITS,(UCHAR *)&leak_board_limits.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecGetEventParam() :Failed to Read OFFSET_D_LEAK_BOARD_LIMITS register ");
 			return false;
 		}
 		leak_board_limits.fields.TimeTillEventOn=eventParam.value;
 		writeSize_=sizeof(UN_D_LEAK_BOARD_LIMITS);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_LEAK_BOARD_LIMITS,(UCHAR *)&leak_board_limits.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_LEAK_BOARD_LIMITS,(UCHAR *)&leak_board_limits.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecGetEventParam() :Failed to Write OFFSET_D_LEAK_BOARD_LIMITS register ");
 			return false;
 		}
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_LEAK_BOARD_LIMITS,(UCHAR *)&leak_board_limits.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_LEAK_BOARD_LIMITS,(UCHAR *)&leak_board_limits.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecGetEventParam() :Failed to Read (verifY) OFFSET_D_LEAK_BOARD_LIMITS register ");
 			return false;
@@ -1487,20 +1491,20 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_LEAK_BOARD_LIMITS leak_board_limits;
 		readSize_=sizeof(UN_D_LEAK_BOARD_LIMITS);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_LEAK_BOARD_LIMITS,(UCHAR *)&leak_board_limits.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_LEAK_BOARD_LIMITS,(UCHAR *)&leak_board_limits.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecGetEventParam() :Failed to Read OFFSET_D_LEAK_BOARD_LIMITS register ");
 			return false;
 		}
 		leak_board_limits.fields.ThInternalLeakLimit=eventParam.value;
 		writeSize_=sizeof(UN_D_LEAK_BOARD_LIMITS);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_LEAK_BOARD_LIMITS,(UCHAR *)&leak_board_limits.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_LEAK_BOARD_LIMITS,(UCHAR *)&leak_board_limits.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecGetEventParam() :Failed to Write OFFSET_D_LEAK_BOARD_LIMITS register ");
 			return false;
 		}
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_LEAK_BOARD_LIMITS,(UCHAR *)&leak_board_limits.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_ENVIRONMENT |OFFSET_D_LEAK_BOARD_LIMITS,(UCHAR *)&leak_board_limits.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecGetEventParam() :Failed to Read (verifY) OFFSET_D_LEAK_BOARD_LIMITS register ");
 			return false;
@@ -1519,20 +1523,20 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_WATER_MODULE_LIMITS  water_module_limits;
 		readSize_=sizeof(UN_D_WATER_MODULE_LIMITS);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecGetEventParam() :Failed to Read OFFSET_D_WATER_MODULE_LIMITS register ");
 			return false;
 		}
 		water_module_limits.fields.LeakWaterModuleImpLimit=eventParam.value;
 		writeSize_=sizeof(UN_D_WATER_MODULE_LIMITS);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)|  OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)|  OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecGetEventParam() :Failed to Write OFFSET_D_WATER_MODULE_LIMITS register ");
 			return false;
 		}
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecGetEventParam() :Failed to Read (verifY) OFFSET_D_WATER_MODULE_LIMITS register ");
 			return false;
@@ -1550,20 +1554,20 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_WATER_MODULE_LIMITS  water_module_limits;
 		readSize_=sizeof(UN_D_WATER_MODULE_LIMITS);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecGetEventParam() :Failed to Read OFFSET_D_WATER_MODULE_LIMITS register ");
 			return false;
 		}
 		water_module_limits.fields.LeakWaterModuleTimeTillEventOn=eventParam.value;
 		writeSize_=sizeof(UN_D_WATER_MODULE_LIMITS);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)|  OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)|  OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecGetEventParam() :Failed to Write OFFSET_D_WATER_MODULE_LIMITS register ");
 			return false;
 		}
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)|  OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)|  OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecGetEventParam() :Failed to Read (verifY) v register ");
 			return false;
@@ -1581,20 +1585,20 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_WATER_MODULE_LIMITS  water_module_limits;
 		readSize_=sizeof(UN_D_WATER_MODULE_LIMITS);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecGetEventParam() :Failed to Read OFFSET_D_WATER_MODULE_LIMITS register ");
 			return false;
 		}
 		water_module_limits.fields.LeakChillerImpLimit=eventParam.value;
 		writeSize_=sizeof(UN_D_WATER_MODULE_LIMITS);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)|  OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)|  OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecGetEventParam() :Failed to Write OFFSET_D_WATER_MODULE_LIMITS register ");
 			return false;
 		}
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)|  OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)|  OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecGetEventParam() :Failed to Read (verifY) OFFSET_D_WATER_MODULE_LIMITS register ");
 			return false;
@@ -1612,20 +1616,20 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_WATER_MODULE_LIMITS  water_module_limits;
 		readSize_=sizeof(UN_D_WATER_MODULE_LIMITS);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecGetEventParam() :Failed to Read OFFSET_D_WATER_MODULE_LIMITS register ");
 			return false;
 		}
 		water_module_limits.fields.LeakChillerTimeTillEventOn=eventParam.value;
 		writeSize_=sizeof(UN_D_WATER_MODULE_LIMITS);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecGetEventParam() :Failed to Write OFFSET_D_WATER_MODULE_LIMITS register ");
 			return false;
 		}
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)&water_module_limits.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)&water_module_limits.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecGetEventParam() :Failed to Read (verifY) OFFSET_D_WATER_MODULE_LIMITS register ");
 			return false;
@@ -1643,20 +1647,20 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_WATER_MODULE_LIMITS  water_module_limits;
 		readSize_=sizeof(UN_D_WATER_MODULE_LIMITS);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecGetEventParam() :Failed to Read OFFSET_D_WATER_MODULE_LIMITS register ");
 			return false;
 		}
 		water_module_limits.fields.LeakFloorImpLimit=eventParam.value;
 		writeSize_=sizeof(UN_D_WATER_MODULE_LIMITS);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)|  OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)|  OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecGetEventParam() :Failed to Write OFFSET_D_WATER_MODULE_LIMITS register ");
 			return false;
 		}
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)|  OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)&water_module_limits.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)|  OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)&water_module_limits.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecGetEventParam() :Failed to Read (verifY) OFFSET_D_WATER_MODULE_LIMITS register ");
 			return false;
@@ -1674,20 +1678,20 @@ const int ClibIntecOperations::IntecSetEventParam(int cardId, EventType evType, 
 	{
 		UN_D_WATER_MODULE_LIMITS  water_module_limits;
 		readSize_=sizeof(UN_D_WATER_MODULE_LIMITS);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecGetEventParam() :Failed to Read OFFSET_D_WATER_MODULE_LIMITS register ");
 			return false;
 		}
 		water_module_limits.fields.LeakFloorTimeTillEventOn=eventParam.value;
 		writeSize_=sizeof(UN_D_WATER_MODULE_LIMITS);
-		if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)|  OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,writeSize_)!=STATUS_OK)
+		if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)|  OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)water_module_limits.value,writeSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecGetEventParam() :Failed to Write OFFSET_D_WATER_MODULE_LIMITS register ");
 			return false;
 		}
 		// verify
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)|  OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)&water_module_limits.value,&readSize_)!=STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)|  OFFSET_UNIT_D_WATER_MODULE |OFFSET_D_WATER_MODULE_LIMITS,(UCHAR *)&water_module_limits.value,&readSize_)!=STATUS_OK)
 		{
 			SetIntecLastError("IntecGetEventParam() :Failed to Read (verifY) OFFSET_D_WATER_MODULE_LIMITS register ");
 			return false;
@@ -1709,7 +1713,7 @@ const int ClibIntecOperations::IntecGetDiodeInputs(unsigned int *mask)
 {
 	UN_DIODE_CFG diode_cfg;
 	readSize_=sizeof(UN_DIODE_CFG);
-	if (libIntec_ReadDeviceByAddr(deviceIndex_,INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_DIODE_CFG,(UCHAR *)&diode_cfg.value,&readSize_) != STATUS_OK)
+	if (libIntec_ReadDeviceByAddr(m_device_index,INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_DIODE_CFG,(UCHAR *)&diode_cfg.value,&readSize_) != STATUS_OK)
 	{
 		SetIntecLastError("IntecGetDiodeInputs:: Failed to Read  OFFSET_P_PECI_CFG");
 		return false;
@@ -1722,7 +1726,7 @@ const int ClibIntecOperations::IntecGetPFInputs(unsigned int *mask)
 {
 	UN_PF_CFG pf_cfg;
 	readSize_=sizeof(UN_PF_CFG);
-	if(libIntec_ReadDeviceByAddr(deviceIndex_,INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_PF_CFG,(UCHAR *)&pf_cfg.value,&readSize_) != STATUS_OK)
+	if(libIntec_ReadDeviceByAddr(m_device_index,INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_PF_CFG,(UCHAR *)&pf_cfg.value,&readSize_) != STATUS_OK)
 	{
 		SetIntecLastError("IntecGetPFInputs:: Failed to Read OFFSET_PF_CFG");
 		return false;
@@ -1735,7 +1739,7 @@ const int ClibIntecOperations::IntecGetProcHotInputs(unsigned int *mask)
 {
 	UN_PROCHOT_CFG prochot_cfg;
 	readSize_=sizeof(UN_PROCHOT_CFG);
-	if(libIntec_ReadDeviceByAddr(deviceIndex_,INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_PROCHOT_CFG,(UCHAR *)&prochot_cfg.value,&readSize_)!=STATUS_OK)
+	if(libIntec_ReadDeviceByAddr(m_device_index,INTEC_BASE_ADDR|OFFSET_UNIT_JUNCTION|OFFSET_PROCHOT_CFG,(UCHAR *)&prochot_cfg.value,&readSize_)!=STATUS_OK)
 	{
 		SetIntecLastError("IntecGetProcHotInputs:: Failed to Read OFFSET_PROCHOT_CFG");
 		return false;
@@ -1756,7 +1760,7 @@ const int ClibIntecOperations::IntecGetPeciInputs(unsigned int *mask)
 		return false;
 	}
 
-	if(libIntec_ReadDeviceByAddr(deviceIndex_,PECI_DEVICE_BASE_ADDR |OFFSET_UNIT_P_DTS_CFG|OFFSET_P_PECI_CFG,(UCHAR *)&peci_cfg.value,&readSize_))
+	if(libIntec_ReadDeviceByAddr(m_device_index,PECI_DEVICE_BASE_ADDR |OFFSET_UNIT_P_DTS_CFG|OFFSET_P_PECI_CFG,(UCHAR *)&peci_cfg.value,&readSize_))
 	{
 		SetIntecLastError("IntecGetPeciInputs ::Failed to Read  OFFSET_P_PECI_CFG");
 		return false;
@@ -2059,7 +2063,7 @@ const int ClibIntecOperations::IntecGetTemperature(int cardId, unsigned short *t
 
 
 		readSize_=sizeof(UN_D_FEEDBACK_STATUS);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)|OFFSET_UNIT_D_CONTROL|OFFSET_D_FEEDBACK_STATUS,(unsigned char *)&feedback_status.value,&readSize_) != STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)|OFFSET_UNIT_D_CONTROL|OFFSET_D_FEEDBACK_STATUS,(unsigned char *)&feedback_status.value,&readSize_) != STATUS_OK)
 		{
 //			sprintf_s(msg_buf,MSG_BUF_SIZE,"IntecGetTemperature:Failed to Read  IntecDCard (%d) OFFSET_D_FEEDBACK_STATUS",cardId);
 			//SetIntecLastError(msg_buf);
@@ -2073,7 +2077,7 @@ const int ClibIntecOperations::IntecGetTemperature(int cardId, unsigned short *t
 			return ERROR_FAIL;
 		}
 		readSize_=sizeof(UN_D_FEEDBACK_TEMP);
-		if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)|OFFSET_UNIT_D_CONTROL|OFFSET_D_FEEDBACK_TEMP,(unsigned char *)&feedback_temperature.value,&readSize_) != STATUS_OK)
+		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)|OFFSET_UNIT_D_CONTROL|OFFSET_D_FEEDBACK_TEMP,(unsigned char *)&feedback_temperature.value,&readSize_) != STATUS_OK)
 		{
 //			sprintf_s(msg_buf,MSG_BUF_SIZE,"IntecGetTemperature:Failed to Read  IntecDCard (%d) OFFSET_D_FEEDBACK_TEMP",cardId);
 //			SetIntecLastError(msg_buf);
@@ -2111,7 +2115,7 @@ const int ClibIntecOperations::IntecSetTemperature(int cardId, unsigned short te
 		UN_D_FEEDBACK_STATUS	feedback_status;
 		UN_D_FEEDBACK_SETPOINT  feedback_setpoint;
 		readSize_=sizeof(UN_D_FEEDBACK_STATUS);
-		if (libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)|OFFSET_UNIT_D_CONTROL|OFFSET_D_FEEDBACK_STATUS,(unsigned char *)&feedback_status.value,&readSize_)!= STATUS_OK)
+		if (libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)|OFFSET_UNIT_D_CONTROL|OFFSET_D_FEEDBACK_STATUS,(unsigned char *)&feedback_status.value,&readSize_)!= STATUS_OK)
 		{
 //			sprintf_s(msg_buf,MSG_BUF_SIZE,"IntecSetTemperature: Failed to Read  IntecDCard (%d) OFFSET_D_FEEDBACK_STATUS",cardId);
 //			SetIntecLastError(msg_buf);
@@ -2125,7 +2129,7 @@ const int ClibIntecOperations::IntecSetTemperature(int cardId, unsigned short te
 		}
 		feedback_setpoint.fields.SetPoint=temprature;
 		writeSize_=sizeof(UN_D_FEEDBACK_SETPOINT);
-		if (libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)|OFFSET_UNIT_D_CONTROL|OFFSET_D_FEEDBACK_SETPOINT,(unsigned char *)&feedback_setpoint.value,writeSize_) != STATUS_OK)
+		if (libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)|OFFSET_UNIT_D_CONTROL|OFFSET_D_FEEDBACK_SETPOINT,(unsigned char *)&feedback_setpoint.value,writeSize_) != STATUS_OK)
 		{
 //			sprintf_s(msg_buf,MSG_BUF_SIZE,"IntecSetTemperature:Failed to Write  IntecDCard (%d) OFFSET_D_FEEDBACK_SETPOINT",cardId);
 //			SetIntecLastError(msg_buf);
@@ -2154,7 +2158,7 @@ const int ClibIntecOperations::IntecGetDeviceSerialNumber(IntecCardType card_typ
 		case IntecCard:
 			UN_INTEC_SERIAL intec_serial;
 			readSize_= sizeof(UN_INTEC_SERIAL);
-			if(libIntec_ReadDeviceByAddr(deviceIndex_,INTEC_BASE_ADDR|OFFSET_UNIT_GENERAL|OFFSET_INTEC_SERIAL, intec_serial.value,&readSize_) != STATUS_OK)
+			if(libIntec_ReadDeviceByAddr(m_device_index,INTEC_BASE_ADDR|OFFSET_UNIT_GENERAL|OFFSET_INTEC_SERIAL, intec_serial.value,&readSize_) != STATUS_OK)
 			{
 				SetIntecLastError("IntecGetDeviceSerialNumber() :Failed to Read OFFSET_INTEC_SERIAL ");
 				return ERROR_FAIL;
@@ -2168,7 +2172,7 @@ const int ClibIntecOperations::IntecGetDeviceSerialNumber(IntecCardType card_typ
 			{
 				UN_D_SERIAL intecd_serial;
 				readSize_= sizeof(UN_D_SERIAL);
-				if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< card_id)|OFFSET_UNIT_D_GENERAL|OFFSET_D_SERIAL,intecd_serial.value,&readSize_) != STATUS_OK)
+				if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< card_id)|OFFSET_UNIT_D_GENERAL|OFFSET_D_SERIAL,intecd_serial.value,&readSize_) != STATUS_OK)
 				{
 					SetIntecLastError("IntecGetDeviceSerialNumber() :Failed to Read OFFSET_INTEC_SERIAL ");
 					return ERROR_FAIL;
@@ -2220,7 +2224,7 @@ const int ClibIntecOperations::IntecSetAllEventDisableEnable(int cardId, EventTy
 		case FailureEvent:
 			UN_D_FAILURES_DISABLE failures_disable_status;
 			readSize_=sizeof(UN_D_FAILURES_DISABLE);
-			if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_EVENTS |OFFSET_D_FAILURES_DISABLE,(UCHAR *)&failures_disable_status.value,&readSize_)!=STATUS_OK)
+			if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_EVENTS |OFFSET_D_FAILURES_DISABLE,(UCHAR *)&failures_disable_status.value,&readSize_)!=STATUS_OK)
 			{
 				SetIntecLastError("IntecSetEventDisableEnable() :Failed to Read UN_D_FAILURES_DISABLE register ");
 				return false;
@@ -2237,7 +2241,7 @@ const int ClibIntecOperations::IntecSetAllEventDisableEnable(int cardId, EventTy
 				}
 			}
 			writeSize_=sizeof(UN_D_FAILURES_DISABLE);
-			if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_EVENTS |OFFSET_D_FAILURES_DISABLE,(UCHAR *)&failures_disable_status.value,writeSize_)!=STATUS_OK)
+			if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_EVENTS |OFFSET_D_FAILURES_DISABLE,(UCHAR *)&failures_disable_status.value,writeSize_)!=STATUS_OK)
 			{
 				SetIntecLastError("IntecSetEventDisableEnable() :Failed to write UN_D_FAILURES_DISABLE register ");
 				return false;
@@ -2247,7 +2251,7 @@ const int ClibIntecOperations::IntecSetAllEventDisableEnable(int cardId, EventTy
 		case WarningEvent:
 			UN_D_WARNINGS_DISABLE warnings_disable_status;
 			readSize_=sizeof(UN_D_WARNINGS_DISABLE);
-			if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_EVENTS |OFFSET_D_WARNINGS_DISABLE,(UCHAR *)&warnings_disable_status.value,&readSize_)!=STATUS_OK)
+			if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_EVENTS |OFFSET_D_WARNINGS_DISABLE,(UCHAR *)&warnings_disable_status.value,&readSize_)!=STATUS_OK)
 			{
 				SetIntecLastError("IntecSetEventDisableEnable() :Failed to Read OFFSET_D_WARNINGS_DISABLE register ");
 				return false;
@@ -2265,7 +2269,7 @@ const int ClibIntecOperations::IntecSetAllEventDisableEnable(int cardId, EventTy
 			}
 
 			writeSize_=sizeof(UN_D_WARNINGS_DISABLE);
-			if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_EVENTS |OFFSET_D_WARNINGS_DISABLE,(UCHAR *)&warnings_disable_status.value,writeSize_)!=STATUS_OK)
+			if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_EVENTS |OFFSET_D_WARNINGS_DISABLE,(UCHAR *)&warnings_disable_status.value,writeSize_)!=STATUS_OK)
 			{
 				SetIntecLastError("IntecSetEventDisableEnable() :Failed to write OFFSET_D_WARNINGS_DISABLE register ");
 				return false;
@@ -2276,7 +2280,7 @@ const int ClibIntecOperations::IntecSetAllEventDisableEnable(int cardId, EventTy
 
 			UN_D_NOTIFICATION_DISABLE notifications_disable_status;
 			readSize_=sizeof(UN_D_NOTIFICATION_DISABLE);
-			if(libIntec_ReadDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_EVENTS |OFFSET_D_NOTIFICATION_DISABLE,(UCHAR *)&notifications_disable_status.value,&readSize_)!=STATUS_OK)
+			if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_EVENTS |OFFSET_D_NOTIFICATION_DISABLE,(UCHAR *)&notifications_disable_status.value,&readSize_)!=STATUS_OK)
 			{
 				SetIntecLastError("IntecSetEventDisableEnable() :Failed to Read OFFSET_D_NOTIFICATION_DISABLE register ");
 				return false;
@@ -2293,7 +2297,7 @@ const int ClibIntecOperations::IntecSetAllEventDisableEnable(int cardId, EventTy
 			}
 
 			writeSize_=sizeof(UN_D_NOTIFICATION_DISABLE);
-			if(libIntec_WriteDeviceByAddr(deviceIndex_,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_EVENTS |OFFSET_D_NOTIFICATION_DISABLE,(UCHAR *)&notifications_disable_status.value,writeSize_)!=STATUS_OK)
+			if(libIntec_WriteDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)| OFFSET_UNIT_D_EVENTS |OFFSET_D_NOTIFICATION_DISABLE,(UCHAR *)&notifications_disable_status.value,writeSize_)!=STATUS_OK)
 			{
 				SetIntecLastError("IntecSetEventDisableEnable() :Failed to write OFFSET_D_NOTIFICATION_DISABLE register ");
 				return false;

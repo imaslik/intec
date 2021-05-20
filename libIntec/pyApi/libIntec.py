@@ -10,17 +10,25 @@ from enum import Enum
 
 if platform.system() == "Linux":
     #os.environ["LD_LIBRARY_PATH"] = f"$LD_LIBRARY_PATH:{os.environ['PWD']}"
-    __libIntec = cdll.LoadLibrary("libIntec.so")
+    #__libIntec = cdll.LoadLibrary("libIntec.so")
+    __libIntec = CDLL("libIntec.so")
 
 IntecUsbDeviceTypeToInt = { "IntecH" : 0,
                             "IntecD" : 1,
                             "TAU"    : 2}
 
+__Initialize = __libIntec.__libIntec_Initialize
+__Exit = __libIntec.__libIntec_Exit
+__InitializeCard = __libIntec.__libIntec_InitializeCard
+__GetTemperature = __libIntec.__libIntec_GetTemperature
+__SetTemperature = __libIntec.__libIntec_SetTemperature
+__GetlibVersion = __libIntec.__libIntec_GetlibVersion
+
 def Initialize(device="IntecH"):
     __device = c_int(IntecUsbDeviceTypeToInt.get(device, 0))
     __ret = c_int()
     try:
-        __ret = __libIntec.__libIntec_Initialize(__device)
+        __ret = __Initialize(__device)
     except Exception as e:
         raise Exception("libIntec exception at Initialize")
     if __ret != 0:
@@ -30,7 +38,7 @@ def Initialize(device="IntecH"):
 def Exit():
     __ret = c_int()
     try:
-        __ret = __libIntec.__libIntec_Exit()
+        __ret = __Exit()
     except Exception as e:
         raise Exception("libIntec exception at Exit")
     if __ret != 0:
@@ -41,7 +49,7 @@ def InitializeCard(index):
     __index = c_int(index)
     __ret = c_int()
     try:
-        __ret = __libIntec.__libIntec_InitializeCard(__index)
+        __ret = __InitializeCard(__index)
     except Exception as e:
         raise Exception("libIntec exception at InitializeCard")
     if __ret != 0:
@@ -54,7 +62,7 @@ def GetTemperature(index, cardId):
     __temperature = c_float()
     __timestamp = c_uint()
     try:
-        __ret = __libIntec.__libIntec_GetTemperature(__index, __cardId, pointer(__temperature), pointer(__timestamp))
+        __ret = __GetTemperature(__index, __cardId, pointer(__temperature), pointer(__timestamp))
     except Exception as e:
         raise Exception("libIntec exception at GetTemperature")
 
@@ -68,7 +76,7 @@ def GetTemperatureWithTimestamp(index, cardId):
     __temperature = c_float()
     __timestamp = c_uint()
     try:
-        __ret = __libIntec.__libIntec_GetTemperature(__index, __cardId, pointer(__temperature), pointer(__timestamp))
+        __ret = __GetTemperature(__index, __cardId, pointer(__temperature), pointer(__timestamp))
     except Exception as e:
         raise Exception("libIntec exception at GetTemperature")
 
@@ -81,7 +89,7 @@ def SetTemperature(index, cardId, temp):
     __cardId = c_int(cardId)
     __temp = c_float(temp)
 
-    __ret = __libIntec.__libIntec_SetTemperature(__index, __cardId, __temp)
+    __ret = __SetTemperature(__index, __cardId, __temp)
     try:
         pass
         #__ret = __libIntec.__libIntec__SetTemperature(__index, __cardId, __temp)
@@ -96,7 +104,7 @@ def GetlibVersion():
     __major = c_uint()
     __minor = c_uint()
     __ret = c_int()
-    __ret = __libIntec.__libIntec_GetlibVersion(byref(__major), byref(__minor))
+    __ret = __GetlibVersion(byref(__major), byref(__minor))
     if __ret is not 0:
         raise Exception("libIntec exception at GetlibVersion")
     return {"major":__major.value, "minor":__minor.value}
