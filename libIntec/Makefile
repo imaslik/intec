@@ -2,7 +2,7 @@ CCPP=g++
 CC=gcc
 FLAGS=-Wall
 LDLIBUSB=$(shell pkg-config --libs --cflags libusb-1.0) -lstdc++ 
-USER_SITE=$(shell python tests/pypaths.py -p site-packages)
+USER_SITE=$(shell python3 utils/pypaths.py -p site-packages)
 
 SRC=src
 INC=inc
@@ -21,7 +21,6 @@ TARGET= $(LIB)/libIntec.so
 all: $(TARGET)
 
 install: $(TARGET)
-	echo $(USER_SITE)
 	sudo cp -rf $(TARGET) /usr/lib64/libIntec.so
 	sudo cp $(LIB)/libIntec.h /usr/include/libIntec.h 
 	sudo mkdir -p /etc/libIntec
