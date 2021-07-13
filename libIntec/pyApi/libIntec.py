@@ -7,6 +7,7 @@ from ctypes import *
 import os
 import platform 
 from enum import Enum
+import time
 
 if platform.system() == "Linux":
     #os.environ["LD_LIBRARY_PATH"] = f"$LD_LIBRARY_PATH:{os.environ['PWD']}"
@@ -17,12 +18,15 @@ IntecUsbDeviceTypeToInt = { "IntecH" : 0,
                             "IntecD" : 1,
                             "TAU"    : 2}
 
+LAST_ERROR_BUFFER_SIZE = 512
+
 __Initialize = __libIntec.__libIntec_Initialize
 __Exit = __libIntec.__libIntec_Exit
 __InitializeCard = __libIntec.__libIntec_InitializeCard
 __GetTemperature = __libIntec.__libIntec_GetTemperature
 __SetTemperature = __libIntec.__libIntec_SetTemperature
 __GetlibVersion = __libIntec.__libIntec_GetlibVersion
+__GetLastError = __libIntec.__libIntec_GetLastError
 
 def Initialize(device="IntecH"):
     __device = c_int(IntecUsbDeviceTypeToInt.get(device, 0))
@@ -63,10 +67,9 @@ def GetTemperature(index, cardId):
     __timestamp = c_uint()
     try:
         __ret = __GetTemperature(__index, __cardId, pointer(__temperature), pointer(__timestamp))
+        if __ret != 0:
+            raise Exception("libIntec exception at GetTemperature")
     except Exception as e:
-        raise Exception("libIntec exception at GetTemperature")
-
-    if __ret != 0:
         raise Exception("libIntec exception at GetTemperature")
     return __temperature.value
 
@@ -77,10 +80,9 @@ def GetTemperatureWithTimestamp(index, cardId):
     __timestamp = c_uint()
     try:
         __ret = __GetTemperature(__index, __cardId, pointer(__temperature), pointer(__timestamp))
+        if __ret != 0:
+            raise Exception("libIntec exception at GetTemperature")
     except Exception as e:
-        raise Exception("libIntec exception at GetTemperature")
-
-    if __ret != 0:
         raise Exception("libIntec exception at GetTemperature")
     return {"temperature": __temperature.value, "timestamp": __timestamp.value}
 
@@ -89,15 +91,12 @@ def SetTemperature(index, cardId, temp):
     __cardId = c_int(cardId)
     __temp = c_float(temp)
 
-    __ret = __SetTemperature(__index, __cardId, __temp)
     try:
-        pass
-        #__ret = __libIntec.__libIntec__SetTemperature(__index, __cardId, __temp)
+        __ret = __SetTemperature(__index, __cardId, __temp)
+        if __ret != 0:
+            raise Exception("libIntec exception at SetTemperature")  
     except Exception as e:
-        raise Exception("libIntec exception at SetTemperature")  
-
-    if __ret != 0:
-        raise Exception("libIntec exception at SetTemperature")  
+        raise e  
     return True
 
 def GetlibVersion():
@@ -109,6 +108,19 @@ def GetlibVersion():
         raise Exception("libIntec exception at GetlibVersion")
     return {"major":__major.value, "minor":__minor.value}
 
+def GetLastError():
+    __buffer = create_string_buffer(LAST_ERROR_BUFFER_SIZE)
+    __cptr = c_char_p()
+    __cptr.value = addressof(__buffer)
+    try:
+        ret = __GetLastError(__cptr, LAST_ERROR_BUFFER_SIZE)
+        if ret != 0:
+            raise Exception("Failed to get last error message")
+        return __buffer.value.decode("utf-8") 
+    except Exception as e:
+        print(str(e))
+        raise e
+
 if __name__=="__main__":
     try:
         import time
@@ -116,15 +128,18 @@ if __name__=="__main__":
         print(f"libIntec Versrion {ver['major']}.{ver['minor']}")
         Initialize()
         InitializeCard(0)
+        print(GetLastError())
         set_temp = 25 
         SetTemperature(0, 0, set_temp)
         temp = GetTemperature(0, 0)
-        print(temp["temperature"])
-        while temp["temperature"] < set_temp - 0.5 or temp["temperature"]  > set_temp + 0.5:
+        print(temp)
+        while temp < set_temp - 0.5 or temp > set_temp + 0.5:
             temp = GetTemperature(0, 0)
-            print(temp["temperature"])
+            print(temp)
             time.sleep(1)
         Exit()
     except Exception as e:
         Exit()
+        raise e
+
 

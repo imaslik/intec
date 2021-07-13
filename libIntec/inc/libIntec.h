@@ -26,6 +26,8 @@
 #define ERROR_USB_OPEN_FAIL  5
 #define ERROR_WRITE_FAIL     6
 #define ERRoR_READ_FAIL      7
+#define ERROR_FB_DEVICE_FAIL 8
+
 
 //libIntec Versions
 #define LIBINTEC_VERSION_STR "beta 0.1"

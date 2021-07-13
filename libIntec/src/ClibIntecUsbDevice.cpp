@@ -178,7 +178,7 @@ int32_t ClibIntecUsbDevice::Read(unsigned int addr, unsigned char *szBuffer, uns
 	unsigned char internalReadBuff[MAX_READ_PKT_SIZE];
 	if (WriteAndRead(sendBuffer, PKT_HEADER_LENGTH, internalReadBuff, &actualTReadSize) != STATUS_OK)
 	{
-		return ERROR_FAIL;
+		return ERROR_FB_DEVICE_FAIL;
 	}
 	else
 	{

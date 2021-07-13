@@ -19,7 +19,7 @@ void SetIntecLastError(const char * err)
 {
 	if(!libIntecLastErrorMsg.empty())
 	{
-		libIntecLastErrorMsg.insert(0,"->");
+		libIntecLastErrorMsg.insert(0,"");
 	}
 	libIntecLastErrorMsg.insert(0,err);
 }
@@ -363,3 +363,4 @@ int libIntec_GetDeviceSerialNumber(unsigned int index, IntecCardType type, int c
 		return ERROR_FAIL;
 	}
 }
+

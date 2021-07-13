@@ -2061,31 +2061,35 @@ const int ClibIntecOperations::IntecGetTemperature(int cardId, unsigned short *t
 		UN_D_FEEDBACK_STATUS feedback_status;
 		UN_D_FEEDBACK_TEMP  feedback_temperature;
 
-
-		readSize_=sizeof(UN_D_FEEDBACK_STATUS);
+		readSize_= sizeof(UN_D_FEEDBACK_STATUS);
 		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)|OFFSET_UNIT_D_CONTROL|OFFSET_D_FEEDBACK_STATUS,(unsigned char *)&feedback_status.value,&readSize_) != STATUS_OK)
 		{
-//			sprintf_s(msg_buf,MSG_BUF_SIZE,"IntecGetTemperature:Failed to Read  IntecDCard (%d) OFFSET_D_FEEDBACK_STATUS",cardId);
-			//SetIntecLastError(msg_buf);
-			return ERROR_FAIL;
+			snprintf(msg_buf, MSG_BUF_SIZE, "IntecGetTemperature:Failed to Read  IntecDCard (%d) OFFSET_D_FEEDBACK_STATUS", cardId);
+			SetIntecLastError(msg_buf);
+			usleep(1000);
+			if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)|OFFSET_UNIT_D_CONTROL|OFFSET_D_FEEDBACK_STATUS,(unsigned char *)&feedback_status.value,&readSize_) != STATUS_OK)
+			{
+				std::cout << " failed to find feedback device" << std::endl;
+				return ERROR_FAIL;
+			}
 		}
 
 		if(feedback_status.fields.SourceValid == 0)
 		{
-//			sprintf_s(msg_buf,MSG_BUF_SIZE,"IntecGetTemperature: No valid source for temperature IntecDCard (%d)",cardId);
-//			SetIntecLastError(msg_buf);
+			snprintf(msg_buf,MSG_BUF_SIZE,"IntecGetTemperature: No valid source for temperature IntecDCard (%d)",cardId);
+			SetIntecLastError(msg_buf);
 			return ERROR_FAIL;
 		}
 		readSize_=sizeof(UN_D_FEEDBACK_TEMP);
 		if(libIntec_ReadDeviceByAddr(m_device_index,(INTECD0_DEVICE_BASE_ADDR<< cardId)|OFFSET_UNIT_D_CONTROL|OFFSET_D_FEEDBACK_TEMP,(unsigned char *)&feedback_temperature.value,&readSize_) != STATUS_OK)
 		{
-//			sprintf_s(msg_buf,MSG_BUF_SIZE,"IntecGetTemperature:Failed to Read  IntecDCard (%d) OFFSET_D_FEEDBACK_TEMP",cardId);
-//			SetIntecLastError(msg_buf);
+			snprintf(msg_buf,MSG_BUF_SIZE,"IntecGetTemperature:Failed to Read  IntecDCard (%d) OFFSET_D_FEEDBACK_TEMP",cardId);
+			SetIntecLastError(msg_buf);
 			return ERROR_FAIL;
 		}
 		if(feedback_temperature.fields.TempValid == 0)
 		{
-//			sprintf_s(msg_buf,MSG_BUF_SIZE,"IntecGetTemperature:feedback_temperature is NOT valid  IntecDCard (%d) ",cardId);
+			snprintf(msg_buf,MSG_BUF_SIZE,"IntecGetTemperature:feedback_temperature is NOT valid  IntecDCard (%d) ",cardId);
 			SetIntecLastError(msg_buf);
 			return ERROR_FAIL;
 		}
@@ -2096,8 +2100,8 @@ const int ClibIntecOperations::IntecGetTemperature(int cardId, unsigned short *t
 	}
 	else
 	{
-		//sprintf_s(msg_buf,MSG_BUF_SIZE,"IntecGetTemperature() :IntecDCard (%d) Not Exist ",cardId);
-		//SetIntecLastError(msg_buf);
+		snprintf(msg_buf,MSG_BUF_SIZE,"IntecGetTemperature() :IntecDCard (%d) Not Exist ",cardId);
+		SetIntecLastError(msg_buf);
 	}
 	return ERROR_FAIL;
 }
