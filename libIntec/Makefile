@@ -32,7 +32,7 @@ $(TARGET): $(filter-out $(EXCLUDE),$(BINS))
 	cp $(INC)/libIntec.h $(LIB)/libIntec.h 
 
 $(BIN)/%.o: $(SRC)/%.cpp $(INC)/%.h 
-	$(CCPP) -fPIC $(FLAGS) $(LDLIBUSB)-I$(INC) -c $(filter-out %.h, $^) -o $@ 
+	$(CCPP) -fPIC $(FLAGS) $(LDLIBUSB)-I$(INC) -c $< -o $@ 
  
 
 test:
