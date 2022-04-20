@@ -2,7 +2,13 @@ CCPP=g++
 CC=gcc
 FLAGS=-Wall
 LDLIBUSB=$(shell pkg-config --libs --cflags libusb-1.0) -lstdc++ 
-USER_SITE=$(shell python3 utils/pypaths.py -p site-packages)
+PYTHON=2.7
+ifeq ($(PYTHON3),1)
+PYTHON=3
+endif
+PY_VERSION = python$(PYTHON)
+$(info using $(PY_VERSION))
+USER_SITE=$(shell $(PY_VERSION) utils/pypaths.py -p site-packages)
 
 SRC=src
 INC=inc

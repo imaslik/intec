@@ -96,12 +96,12 @@ def __WaitForTemperature(index, cardId, temperature, thermal_accuracy, thermal_s
     __state = 0
     
     time.sleep(__time_to_wait)
-    print(f"Thermal accuracy: {thermal_accuracy}C")
-    print(f"Thermal stabilization time: {thermal_stabilization_time} sec")
+    print("Thermal accuracy: {}C".format(thermal_accuracy))
+    print("Thermal stabilization time: {} sec".format(thermal_stabilization_time))
     
     while __state < 2:
         if __state == 0:
-            print(f"Waiting for temperature to reach target temperature {temperature}")
+            print("Waiting for temperature to reach target temperature {}".format(temperature))
             __current_temperature = GetTemperature(index,cardId)
             while True:
                 time.sleep(__time_to_wait)
@@ -112,7 +112,7 @@ def __WaitForTemperature(index, cardId, temperature, thermal_accuracy, thermal_s
             __state = 1
         elif __state == 1:
             __waited = 0
-            print(f"Waiting for temperature to stabilize")
+            print("Waiting for temperature to stabilize")
             while True:
                 time.sleep(__time_to_wait)
                 __waited += __time_to_wait
@@ -126,8 +126,8 @@ def __WaitForTemperature(index, cardId, temperature, thermal_accuracy, thermal_s
                 if __waited >= thermal_stabilization_time:
                     __state = 2
                     break
-    print(f"Reached target temperature {temperature} with accuracy {thermal_accuracy}")
-    print(f"Current temperature {GetTemperature(index,cardId)}")
+    print("Reached target temperature {} with accuracy {}".format(temperature,thermal_accuracy))
+    print("Current temperature {}".format(GetTemperature(index,cardId)))
 
 def SetTemperatureAsync(index, cardId, temp):
     __index = c_uint(index)
@@ -182,7 +182,7 @@ if __name__=="__main__":
     try:
         import time
         ver = GetlibVersion()
-        print(f"libIntec Versrion {ver['major']}.{ver['minor']}")
+        #print(f"libIntec Versrion {ver['major']}.{ver['minor']}")
         Initialize()
         InitializeCard(0)
         SetTemperature(0,0,25,0.5,5)
