@@ -28,9 +28,11 @@ __SetTemperature = __libIntec.__libIntec_SetTemperature
 __GetlibVersion = __libIntec.__libIntec_GetlibVersion
 __GetLastError = __libIntec.__libIntec_GetLastError
 
+
 def Initialize(device="IntecH"):
     __device = c_int(IntecUsbDeviceTypeToInt.get(device, 0))
     __ret = c_int()
+    
     try:
         __ret = __Initialize(__device)
     except Exception as e:
@@ -86,7 +88,48 @@ def GetTemperatureWithTimestamp(index, cardId):
         raise Exception("libIntec exception at GetTemperature")
     return {"temperature": __temperature.value, "timestamp": __timestamp.value}
 
-def SetTemperature(index, cardId, temp):
+def __WaitForTemperature(index, cardId, temperature, thermal_accuracy, thermal_stabilization_time):
+    __time_to_wait = 1
+    __waited = 0
+    __temp_reached_target = False
+    __temp_stable = False
+    __state = 0
+    
+    time.sleep(__time_to_wait)
+    print(f"Thermal accuracy: {thermal_accuracy}C")
+    print(f"Thermal stabilization time: {thermal_stabilization_time} sec")
+    
+    while __state < 2:
+        if __state == 0:
+            print(f"Waiting for temperature to reach target temperature {temperature}")
+            __current_temperature = GetTemperature(index,cardId)
+            while True:
+                time.sleep(__time_to_wait)
+                __current_temperature = GetTemperature(index,cardId)
+                __temp_reached_target = round(abs(__current_temperature - temperature),1) <= thermal_accuracy
+                if __temp_reached_target:
+                    break
+            __state = 1
+        elif __state == 1:
+            __waited = 0
+            print(f"Waiting for temperature to stabilize")
+            while True:
+                time.sleep(__time_to_wait)
+                __waited += __time_to_wait
+                __current_temperature = GetTemperature(index,cardId)
+                __temp_stable = round(abs(__current_temperature - temperature),1) <= thermal_accuracy
+                
+                if not __temp_stable:
+                    __state = 0
+                    break
+                
+                if __waited >= thermal_stabilization_time:
+                    __state = 2
+                    break
+    print(f"Reached target temperature {temperature} with accuracy {thermal_accuracy}")
+    print(f"Current temperature {GetTemperature(index,cardId)}")
+
+def SetTemperatureAsync(index, cardId, temp):
     __index = c_uint(index)
     __cardId = c_int(cardId)
     __temp = c_float(temp)
@@ -95,6 +138,20 @@ def SetTemperature(index, cardId, temp):
         __ret = __SetTemperature(__index, __cardId, __temp)
         if __ret != 0:
             raise Exception("libIntec exception at SetTemperature")  
+    except Exception as e:
+        raise e  
+    return True
+
+def SetTemperature(index, cardId, temp, thermal_accuracy = 0.5, thermal_stabilization_time = 1):
+    __index = c_uint(index)
+    __cardId = c_int(cardId)
+    __temp = c_float(temp)
+
+    try:
+        __ret = __SetTemperature(__index, __cardId, __temp)
+        if __ret != 0:
+            raise Exception("libIntec exception at SetTemperature") 
+        __WaitForTemperature(index,cardId, temp, thermal_accuracy, thermal_stabilization_time)
     except Exception as e:
         raise e  
     return True
@@ -128,15 +185,16 @@ if __name__=="__main__":
         print(f"libIntec Versrion {ver['major']}.{ver['minor']}")
         Initialize()
         InitializeCard(0)
-        print(GetLastError())
-        set_temp = 25 
-        SetTemperature(0, 0, set_temp)
-        temp = GetTemperature(0, 0)
-        print(temp)
-        while temp < set_temp - 0.5 or temp > set_temp + 0.5:
-            temp = GetTemperature(0, 0)
-            print(temp)
-            time.sleep(1)
+        SetTemperature(0,0,25,0.5,5)
+        # print(GetLastError())
+        # set_temp = 25 
+        # SetTemperature(0, 0, set_temp)
+        # temp = GetTemperature(0, 0)
+        # print(temp)
+        # while temp < set_temp - 0.5 or temp > set_temp + 0.5:
+        #     temp = GetTemperature(0, 0)
+        #     print(temp)
+        #     time.sleep(1)
         Exit()
     except Exception as e:
         Exit()
